@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { AppHeader } from "@/components/app-header"
 import {
   Bell,
@@ -14,72 +14,31 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 
+const API_BASE = "http://localhost:3001"
+
 interface Notification {
-  id: string
+  id: number
   type: "new-listing" | "daily-summary" | "price-drop"
   title: string
   description: string
-  time: string
-  read: boolean
-  image?: string
-  listingUrl?: string
+  is_read: boolean
+  created_at: string
+  image_url?: string
+  facebook_url?: string
 }
 
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "new-listing",
-    title: "New listing matches your preferences!",
-    description:
-      'CollegeTown Apartments - $450/mo, 0.3 miles from campus. 4 contracts available.',
-    time: "2 minutes ago",
-    read: false,
-    image: "/images/listing-1.jpg",
-    listingUrl: "https://www.facebook.com/marketplace",
-  },
-  {
-    id: "2",
-    type: "new-listing",
-    title: "New match: CollegeHouse",
-    description:
-      "$475/mo with in-unit laundry and parking. Only 0.5 miles away.",
-    time: "1 hour ago",
-    read: false,
-    image: "/images/listing-2.jpg",
-    listingUrl: "https://www.facebook.com/marketplace",
-  },
-  {
-    id: "3",
-    type: "daily-summary",
-    title: "Your Daily Summary is ready",
-    description:
-      "5 new listings match your criteria today. Check them out!",
-    time: "8 hours ago",
-    read: true,
-  },
-  {
-    id: "4",
-    type: "price-drop",
-    title: "Price drop on DormPlace",
-    description:
-      "DormPlace reduced their price from $520 to $460/mo. Still 2 contracts available.",
-    time: "1 day ago",
-    read: true,
-    image: "/images/listing-3.jpg",
-    listingUrl: "https://www.facebook.com/marketplace",
-  },
-  {
-    id: "5",
-    type: "new-listing",
-    title: "New listing: DormsRUs",
-    description:
-      "$495/mo, shared rooms, parking lot, and laundry. 1.5 miles from campus.",
-    time: "2 days ago",
-    read: true,
-    image: "/images/listing-5.jpg",
-    listingUrl: "https://www.facebook.com/marketplace",
-  },
-]
+function timeAgo(isoString: string): string {
+  const now = Date.now()
+  const then = new Date(isoString).getTime()
+  const seconds = Math.floor((now - then) / 1000)
+  if (seconds < 60) return `${seconds} second${seconds !== 1 ? "s" : ""} ago`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} hour${hours !== 1 ? "s" : ""} ago`
+  const days = Math.floor(hours / 24)
+  return `${days} day${days !== 1 ? "s" : ""} ago`
+}
 
 function getNotificationIcon(type: Notification["type"]) {
   switch (type) {
@@ -94,18 +53,58 @@ function getNotificationIcon(type: Notification["type"]) {
   }
 }
 
+async function fetchNotifications(): Promise<Notification[]> {
+  const res = await fetch(`${API_BASE}/api/notifications`)
+  if (!res.ok) throw new Error("Failed to fetch notifications")
+  return res.json()
+}
+
+async function markAllReadRequest(): Promise<Notification[]> {
+  const res = await fetch(`${API_BASE}/api/notifications/mark-all-read`, {
+    method: "PUT",
+  })
+  if (!res.ok) throw new Error("Failed to mark notifications as read")
+  return res.json()
+}
+
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(mockNotifications)
+  const queryClient = useQueryClient()
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const { data: notifications = [], isLoading, isError } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: fetchNotifications,
+  })
 
-  function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+  const markAllMutation = useMutation({
+    mutationFn: markAllReadRequest,
+    onSuccess: (updatedNotifications) => {
+      queryClient.setQueryData(["notifications"], updatedNotifications)
+    },
+  })
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader />
+        <main className="mx-auto max-w-2xl px-4 py-10 md:py-16">
+          <p className="text-muted-foreground">Loading notifications…</p>
+        </main>
+      </div>
+    )
   }
 
-  function markRead(id: string) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader />
+        <main className="mx-auto max-w-2xl px-4 py-10 md:py-16">
+          <p className="text-destructive">
+            Could not load notifications. Make sure the backend is running on port 3001.
+          </p>
+        </main>
+      </div>
     )
   }
 
@@ -129,8 +128,9 @@ export default function NotificationsPage() {
             {unreadCount > 0 && (
               <button
                 type="button"
-                onClick={markAllRead}
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
+                onClick={() => markAllMutation.mutate()}
+                disabled={markAllMutation.isPending}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/10 disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />
                 Mark all read
@@ -152,25 +152,19 @@ export default function NotificationsPage() {
             return (
               <div
                 key={notification.id}
-                onClick={() => markRead(notification.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ")
-                    markRead(notification.id)
-                }}
-                role="button"
-                tabIndex={0}
-                className={`group cursor-pointer rounded-2xl border p-4 transition-all hover:shadow-md ${
-                  notification.read
+                role="article"
+                className={`group rounded-2xl border p-4 transition-all hover:shadow-md ${
+                  notification.is_read
                     ? "border-border bg-card"
                     : "border-accent/30 bg-accent/5"
                 }`}
               >
                 <div className="flex gap-4">
                   {/* Icon or Image */}
-                  {notification.image ? (
+                  {notification.image_url ? (
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
                       <Image
-                        src={notification.image || "/placeholder.svg"}
+                        src={notification.image_url || "/placeholder.svg"}
                         alt=""
                         fill
                         className="object-cover"
@@ -184,32 +178,25 @@ export default function NotificationsPage() {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <h3
-                        className={`text-sm font-semibold ${
-                          notification.read
-                            ? "text-foreground"
-                            : "text-foreground"
-                        }`}
-                      >
-                        {!notification.read && (
+                      <h3 className="text-sm font-semibold text-foreground">
+                        {!notification.is_read && (
                           <span className="mr-2 inline-block h-2 w-2 rounded-full bg-accent" />
                         )}
                         {notification.title}
                       </h3>
                       <span className="shrink-0 text-xs text-muted-foreground">
-                        {notification.time}
+                        {timeAgo(notification.created_at)}
                       </span>
                     </div>
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                       {notification.description}
                     </p>
 
-                    {notification.listingUrl && (
+                    {notification.facebook_url && (
                       <a
-                        href={notification.listingUrl}
+                        href={notification.facebook_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
                         className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-accent transition-colors hover:text-accent/80"
                       >
                         View on Facebook

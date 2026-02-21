@@ -16,7 +16,6 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/preferences", label: "Preferences" },
   { href: "/listings", label: "Listings" },
-  { href: "/notifications", label: "Notifications" },
 ]
 
 export function AppHeader() {

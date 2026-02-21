@@ -1,42 +1,83 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
 import { Slider } from "@/components/ui/slider"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import {
-  DollarSign,
-  MapPin,
-  Bell,
-  Users,
-  Heart,
-  User,
-} from "lucide-react"
-import Link from "next/link"
+import { DollarSign, MapPin, Bell, Users, Heart, User } from "lucide-react"
+
+const API_BASE = "http://localhost:3001"
+
+interface SavedPrefs {
+  min_price?: number
+  max_price?: number
+  max_distance_miles?: number
+  notification_frequency?: string
+}
 
 interface PreferenceSpecificsProps {
+  featureOrder: string[]
+  savedPrefs: SavedPrefs | null | undefined
   onBack: () => void
 }
 
-export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
-  const [housingType, setHousingType] = useState<"single" | "married">(
-    "single"
-  )
-  const [priceRange, setPriceRange] = useState([300, 800])
-  const [distanceFromCampus, setDistanceFromCampus] = useState([2])
-  const [notificationFrequency, setNotificationFrequency] =
-    useState("daily")
+export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: PreferenceSpecificsProps) {
+  const router = useRouter()
+  const queryClient = useQueryClient()
 
-  const maxPrice = housingType === "married" ? 2000 : 1000
+  const [housingType, setHousingType] = useState<"single" | "married">("single")
+  const [maxRent, setMaxRent] = useState(800)
+  const [distanceFromCampus, setDistanceFromCampus] = useState([2])
+  const [notificationFrequency, setNotificationFrequency] = useState("daily")
+
+  // Populate fields from saved preferences on load
+  useEffect(() => {
+    if (!savedPrefs) return
+    if (savedPrefs.max_price != null) {
+      setMaxRent(savedPrefs.max_price)
+    }
+    if (savedPrefs.max_distance_miles != null) {
+      setDistanceFromCampus([Number(savedPrefs.max_distance_miles)])
+    }
+    if (savedPrefs.notification_frequency) {
+      setNotificationFrequency(savedPrefs.notification_frequency)
+    }
+  }, [savedPrefs])
+
+  const sliderMax = housingType === "married" ? 2000 : 1000
 
   function handleHousingTypeChange(type: "single" | "married") {
     setHousingType(type)
-    if (type === "married") {
-      setPriceRange([500, 1500])
-    } else {
-      setPriceRange([300, 800])
-    }
+    setMaxRent(type === "married" ? 1500 : 800)
   }
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const body = {
+        min_price:           0,
+        max_price:           maxRent,
+        max_distance_miles:  distanceFromCampus[0],
+        price_rank:        featureOrder.indexOf("price") + 1,
+        location_rank:     featureOrder.indexOf("location") + 1,
+        rooms_rank:        featureOrder.indexOf("rooms") + 1,
+        sociability_rank:  featureOrder.indexOf("sociability") + 1,
+        amenities_rank:    featureOrder.indexOf("amenities") + 1,
+        notification_frequency: notificationFrequency,
+      }
+      const res = await fetch(`${API_BASE}/api/preferences`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error("Failed to save preferences")
+      return res.json()
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["preferences"], data)
+      router.push("/listings")
+    },
+  })
 
   return (
     <div className="flex flex-col gap-8">
@@ -44,28 +85,21 @@ export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
         <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-3xl">
           Your Preferences
         </h1>
-        <p className="mt-2 text-muted-foreground">
-          Fine-tune your housing search criteria.
-        </p>
+        <p className="mt-2 text-muted-foreground">Fine-tune your housing search criteria.</p>
       </div>
 
       <div className="mx-auto flex w-full max-w-lg flex-col gap-8">
-        {/* Housing Type Toggle - Married vs Single */}
+        {/* Housing Type */}
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
               <Users className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-foreground">
-                Housing Type
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                This adjusts pricing and listing types
-              </p>
+              <h3 className="font-display font-semibold text-foreground">Housing Type</h3>
+              <p className="text-sm text-muted-foreground">This adjusts pricing and listing types</p>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -76,17 +110,9 @@ export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
                   : "border-border bg-background text-muted-foreground hover:border-muted-foreground/30"
               }`}
             >
-              <User
-                className={`h-6 w-6 ${
-                  housingType === "single"
-                    ? "text-accent"
-                    : "text-muted-foreground"
-                }`}
-              />
+              <User className={`h-6 w-6 ${housingType === "single" ? "text-accent" : "text-muted-foreground"}`} />
               <span className="text-sm font-medium">Single</span>
-              <span className="text-xs text-muted-foreground">
-                Individual rooms & shared
-              </span>
+              <span className="text-xs text-muted-foreground">Individual rooms & shared</span>
             </button>
             <button
               type="button"
@@ -97,17 +123,9 @@ export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
                   : "border-border bg-background text-muted-foreground hover:border-muted-foreground/30"
               }`}
             >
-              <Heart
-                className={`h-6 w-6 ${
-                  housingType === "married"
-                    ? "text-accent"
-                    : "text-muted-foreground"
-                }`}
-              />
+              <Heart className={`h-6 w-6 ${housingType === "married" ? "text-accent" : "text-muted-foreground"}`} />
               <span className="text-sm font-medium">Married</span>
-              <span className="text-xs text-muted-foreground">
-                Private apartments & homes
-              </span>
+              <span className="text-xs text-muted-foreground">Private apartments & homes</span>
             </button>
           </div>
         </div>
@@ -119,34 +137,26 @@ export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
               <DollarSign className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-foreground">
-                Monthly Price Range
-              </h3>
+              <h3 className="font-display font-semibold text-foreground">Maximum Monthly Rent</h3>
               <p className="text-sm text-muted-foreground">
-                {housingType === "married"
-                  ? "Adjusted for couples housing"
-                  : "Per person pricing"}
+                {housingType === "married" ? "Adjusted for couples housing" : "Per person pricing"}
               </p>
             </div>
           </div>
-
-          <div className="flex items-center justify-between text-sm font-medium text-foreground">
-            <span>${priceRange[0]}</span>
-            <span>${priceRange[1]}</span>
+          <div className="mb-3 text-center">
+            <span className="font-display text-3xl font-bold text-foreground">${maxRent}</span>
+            <span className="ml-1 text-muted-foreground">/ month max</span>
           </div>
-
           <Slider
-            value={priceRange}
-            onValueChange={setPriceRange}
+            value={[maxRent]}
+            onValueChange={(val) => setMaxRent(val[0])}
             min={0}
-            max={maxPrice}
+            max={sliderMax}
             step={50}
-            className="mt-3"
           />
-
           <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>$0</span>
-            <span>${maxPrice.toLocaleString()}</span>
+            <span>${sliderMax.toLocaleString()}</span>
           </div>
         </div>
 
@@ -157,15 +167,10 @@ export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
               <MapPin className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-foreground">
-                Distance from Campus
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Maximum radius from your campus
-              </p>
+              <h3 className="font-display font-semibold text-foreground">Distance from Campus</h3>
+              <p className="text-sm text-muted-foreground">Maximum radius from your campus</p>
             </div>
           </div>
-
           <div className="mb-3 text-center">
             <span className="font-display text-3xl font-bold text-foreground">
               {distanceFromCampus[0]}
@@ -174,7 +179,6 @@ export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
               {distanceFromCampus[0] === 1 ? "mile" : "miles"}
             </span>
           </div>
-
           <Slider
             value={distanceFromCampus}
             onValueChange={setDistanceFromCampus}
@@ -183,12 +187,10 @@ export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
             step={0.5}
             className="mt-1"
           />
-
           <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>0.5 mi</span>
             <span>10 mi</span>
           </div>
-
           <div className="mt-4 flex flex-wrap gap-2">
             {[0.5, 1, 2, 5, 10].map((dist) => (
               <button
@@ -214,74 +216,36 @@ export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
               <Bell className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-foreground">
-                Notification Frequency
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                How often would you like to be notified?
-              </p>
+              <h3 className="font-display font-semibold text-foreground">Notification Frequency</h3>
+              <p className="text-sm text-muted-foreground">How often would you like to be notified?</p>
             </div>
           </div>
-
           <RadioGroup
             value={notificationFrequency}
             onValueChange={setNotificationFrequency}
             className="flex flex-col gap-3"
           >
-            <label
-              htmlFor="every-new"
-              className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all ${
-                notificationFrequency === "every-new"
-                  ? "border-accent bg-accent/5"
-                  : "border-border hover:border-muted-foreground/30"
-              }`}
-            >
-              <RadioGroupItem value="every-new" id="every-new" />
-              <div>
-                <p className="font-medium text-foreground">
-                  Every New Listing
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Get notified instantly when a match is found
-                </p>
-              </div>
-            </label>
-
-            <label
-              htmlFor="daily"
-              className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all ${
-                notificationFrequency === "daily"
-                  ? "border-accent bg-accent/5"
-                  : "border-border hover:border-muted-foreground/30"
-              }`}
-            >
-              <RadioGroupItem value="daily" id="daily" />
-              <div>
-                <p className="font-medium text-foreground">Daily Updates</p>
-                <p className="text-sm text-muted-foreground">
-                  Receive a daily summary of new listings
-                </p>
-              </div>
-            </label>
-
-            <label
-              htmlFor="weekly"
-              className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all ${
-                notificationFrequency === "weekly"
-                  ? "border-accent bg-accent/5"
-                  : "border-border hover:border-muted-foreground/30"
-              }`}
-            >
-              <RadioGroupItem value="weekly" id="weekly" />
-              <div>
-                <p className="font-medium text-foreground">
-                  Weekly Updates
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Get a weekly roundup every Monday morning
-                </p>
-              </div>
-            </label>
+            {[
+              { value: "every-new", label: "Every New Listing", desc: "Get notified instantly when a match is found" },
+              { value: "daily",     label: "Daily Updates",     desc: "Receive a daily summary of new listings" },
+              { value: "weekly",    label: "Weekly Updates",    desc: "Get a weekly roundup every Monday morning" },
+            ].map(({ value, label, desc }) => (
+              <label
+                key={value}
+                htmlFor={value}
+                className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all ${
+                  notificationFrequency === value
+                    ? "border-accent bg-accent/5"
+                    : "border-border hover:border-muted-foreground/30"
+                }`}
+              >
+                <RadioGroupItem value={value} id={value} />
+                <div>
+                  <p className="font-medium text-foreground">{label}</p>
+                  <p className="text-sm text-muted-foreground">{desc}</p>
+                </div>
+              </label>
+            ))}
           </RadioGroup>
         </div>
 
@@ -294,13 +258,21 @@ export function PreferenceSpecifics({ onBack }: PreferenceSpecificsProps) {
           >
             Back
           </button>
-          <Link
-            href="/listings"
-            className="flex flex-1 items-center justify-center rounded-xl bg-accent py-3.5 text-center font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+          <button
+            type="button"
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending}
+            className="flex flex-1 items-center justify-center rounded-xl bg-accent py-3.5 text-center font-medium text-accent-foreground transition-colors hover:bg-accent/90 disabled:opacity-50"
           >
-            Save & View Listings
-          </Link>
+            {saveMutation.isPending ? "Saving…" : "Save & View Listings"}
+          </button>
         </div>
+
+        {saveMutation.isError && (
+          <p className="text-center text-sm text-destructive">
+            Could not save. Make sure the backend is running on port 3001.
+          </p>
+        )}
       </div>
     </div>
   )

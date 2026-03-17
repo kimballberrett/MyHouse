@@ -1,4 +1,3 @@
-import { AppHeader } from "@/components/app-header"
 import { ListingCard } from "@/components/listings/listing-card"
 import { Calendar, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
@@ -53,37 +52,34 @@ const mockListings = [
 
 export default function ListingsPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader />
-      <main className="mx-auto max-w-5xl px-4 py-10 md:py-16">
-        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
-              <Calendar className="h-3 w-3" />
-              Daily Summary
-            </div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              {"Here's Your Daily Summary!"}
-            </h1>
-            <p className="mt-1 text-muted-foreground">
-              These are the top listings matching your requirements
-            </p>
+    <main className="mx-auto max-w-5xl px-4 py-10 md:py-16">
+      <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
+            <Calendar className="h-3 w-3" />
+            Daily Summary
           </div>
-          <Link
-            href="/preferences"
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Edit Preferences
-          </Link>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            {"Here's Your Daily Summary!"}
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            These are the top listings matching your requirements
+          </p>
         </div>
+        <Link
+          href="/preferences"
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Edit Preferences
+        </Link>
+      </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {mockListings.map((listing) => (
-            <ListingCard key={listing.name} {...listing} />
-          ))}
-        </div>
-      </main>
-    </div>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {mockListings.map((listing) => (
+          <ListingCard key={listing.name} {...listing} />
+        ))}
+      </div>
+    </main>
   )
 }

@@ -132,11 +132,14 @@ Open http://localhost:3000.
 
 ## Verifying the Vertical Slice
 
+### Preferences (End-to-End)
+
 1. Open http://localhost:3000/preferences
-2. Complete ranking and details
-3. Click Save and View Listings
-4. Return to /preferences and verify persisted values
-5. Visit /notifications and verify data loads and Mark all read works
+2. Complete the two-step form:
+   - **Step 1 (Rank):** Drag to reorder the 5 factors (price, location, rooms, sociability, amenities)
+   - **Step 2 (Details):** Set budget (min/max price), distance from campus, and notification frequency
+3. Click Save
+4. Return to /preferences and verify your values persist
 
 Check preferences in Postgres:
 
@@ -148,6 +151,15 @@ Check notification frequency:
 
 ```bash
 psql -d myhouse -c "SELECT notification_frequency FROM users WHERE user_id = 1;"
+```
+
+### Listings & Notifications (UI Present, Backend In Progress)
+
+- **Listings** (`/listings`): Currently displays 5 mock listings that match the seed data. Backend API for dynamic listings is planned.
+- **Notifications** (`/notifications`): The page renders correctly, but the GET `/api/notifications` and PUT `/api/notifications/mark-all-read` endpoints are not yet implemented. You can check seed data in the database:
+
+```bash
+psql -d myhouse -c "SELECT user_id, listing_id FROM saved_listings WHERE user_id = 1;"
 ```
 
 ## Reset Database

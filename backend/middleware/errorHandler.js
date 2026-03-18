@@ -12,7 +12,11 @@ const errorHandler = (error, req, res, next) => {
   }
 
   console.error(error);
-  return res.status(500).json({ error: "Internal Server Error" });
+  const isProd = process.env.NODE_ENV === "production";
+  return res.status(500).json({
+    error: "Internal Server Error",
+    ...(isProd ? {} : { details: error?.message || "Unknown error" }),
+  });
 };
 
 module.exports = {

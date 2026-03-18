@@ -58,6 +58,12 @@ createdb myhouse
 psql -d myhouse -f backend/migrations/schema.sql
 ```
 
+If your database already exists from an older setup, run:
+
+```bash
+psql -d myhouse -f backend/migrations/add_password_hash_to_users.sql
+```
+
 ### 3. Seed database
 
 ```bash
@@ -75,7 +81,6 @@ Confirm values in backend/.env:
 ```env
 DATABASE_URL=postgresql://localhost:5432/myhouse
 PORT=3001
-DEMO_USER_ID=1
 ```
 
 ### 5. Configure frontend environment
@@ -129,6 +134,13 @@ npm run dev
 ```
 
 Open http://localhost:3000.
+
+## Authentication
+
+- Protected app routes (`/preferences`, `/listings`, `/notifications`) require sign-in.
+- Go to `/login` and sign in with email + password from the `users` table.
+- If the user does not exist, use the `Create Account` button on the login page.
+- Seeded login: `demo@university.edu` / `demo1234`
 
 ## Verifying the Vertical Slice
 

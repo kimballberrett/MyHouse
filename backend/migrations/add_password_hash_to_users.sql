@@ -1,0 +1,9 @@
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
+
+UPDATE users
+SET password_hash = 'scrypt$0f1e2d3c4b5a69788796a5b4c3d2e1f0$86894233de5a05caf4a4fd3795ca8bf818d6a974f6708e9add4d8ebffbee3c6b522b2abb57ee7648c6a3a68e604a29dfbdb816acf543425736e2c4c01d28f5fa'
+WHERE password_hash IS NULL;
+
+ALTER TABLE users
+ALTER COLUMN password_hash SET NOT NULL;

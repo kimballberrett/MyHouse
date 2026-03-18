@@ -1,22 +1,8 @@
-const DEFAULT_DEMO_USER_ID = 1;
-
-const parseDemoUserId = () => {
-  const parsed = Number(process.env.DEMO_USER_ID);
-  if (Number.isInteger(parsed) && parsed > 0) {
-    return parsed;
-  }
-  return DEFAULT_DEMO_USER_ID;
-};
-
 const attachRequestUserContext = (req, res, next) => {
   const headerUserId = req.header("x-user-id");
-  const demoUserId = parseDemoUserId();
 
   if (headerUserId === undefined || headerUserId === "") {
-    req.user = {
-      id: demoUserId,
-      source: "demo",
-    };
+    req.user = null;
     return next();
   }
 

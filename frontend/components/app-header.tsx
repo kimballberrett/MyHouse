@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Home, Menu, X } from "lucide-react"
-import { useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { Home, Menu } from "lucide-react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -11,6 +11,10 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet"
+import {
+  clearAuthenticatedUserId,
+  getAuthenticatedUserId,
+} from "@/lib/auth-client"
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -20,7 +24,21 @@ const navLinks = [
 
 export function AppHeader() {
   const pathname = usePathname()
+  const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    setIsAuthenticated(Boolean(getAuthenticatedUserId()))
+  }, [pathname])
+
+  function handleLogout() {
+    clearAuthenticatedUserId()
+    setIsAuthenticated(false)
+    setOpen(false)
+    router.push("/login")
+    router.refresh()
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
@@ -48,6 +66,15 @@ export function AppHeader() {
               {link.label}
             </Link>
           ))}
+          {isAuthenticated ? (
+            <Button variant="ghost" onClick={handleLogout}>
+              Log Out
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link href="/login">Sign In</Link>
+            </Button>
+          )}
         </nav>
 
         <Sheet open={open} onOpenChange={setOpen}>
@@ -76,6 +103,17 @@ export function AppHeader() {
                   {link.label}
                 </Link>
               ))}
+              {isAuthenticated ? (
+                <Button variant="ghost" onClick={handleLogout} className="justify-start">
+                  Log Out
+                </Button>
+              ) : (
+                <Button asChild className="justify-start">
+                  <Link href="/login" onClick={() => setOpen(false)}>
+                    Sign In
+                  </Link>
+                </Button>
+              )}
             </nav>
           </SheetContent>
         </Sheet>

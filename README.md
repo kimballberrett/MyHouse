@@ -185,3 +185,17 @@ psql -d myhouse -c "SELECT user_id, listing_id FROM saved_listings WHERE user_id
 psql -d myhouse -f backend/migrations/schema.sql
 psql -d myhouse -f backend/migrations/seed.sql
 ```
+
+## OKR's Sprint 1
+**Complete:**
+- Preference page allows user to navigate and select ranking and housing preferences  
+- User authentication allows users to create an account and log in successfully
+- Database exists with dummy data while we wait for webscraping function to work
+- File tree path is set up correctly and allows user to navigate easily through the site
+
+**Not Complete:**
+- Preferences data persists in the PostgreSQL database after saving  
+- Frontend and backend are connected for the preferences feature (end-to-end vertical slice)  
+- Listings page does not yet retrieve data dynamically from the backend API--Listings pages does not yet exist! 
+- Preference rankings and filters are not yet used to influence housing results  
+

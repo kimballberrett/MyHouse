@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Slider } from "@/components/ui/slider"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { updatePreferences } from "@/lib/api"
-import { DollarSign, MapPin, Bell, Users, Heart, User } from "lucide-react"
+import { DollarSign, MapPin, Bell } from "lucide-react"
 
 interface SavedPrefs {
   min_price?: number
@@ -25,14 +25,18 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const [housingType, setHousingType] = useState<"single" | "married">("single")
+  const [minRent, setMinRent] = useState(0)
   const [maxRent, setMaxRent] = useState(800)
   const [distanceFromCampus, setDistanceFromCampus] = useState([2])
   const [notificationFrequency, setNotificationFrequency] = useState("daily")
+  const [formError, setFormError] = useState<string | null>(null)
 
   // Populate fields from saved preferences on load
   useEffect(() => {
     if (!savedPrefs) return
+    if (savedPrefs.min_price != null) {
+      setMinRent(savedPrefs.min_price)
+    }
     if (savedPrefs.max_price != null) {
       setMaxRent(savedPrefs.max_price)
     }
@@ -44,19 +48,30 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
     }
   }, [savedPrefs])
 
-  const sliderMax = housingType === "married" ? 2000 : 1000
+  const sliderMax = 3000
 
-  function handleHousingTypeChange(type: "single" | "married") {
-    setHousingType(type)
-    setMaxRent(type === "married" ? 1500 : 800)
+  function handleMinRentChange(nextValue: number) {
+    const normalized = Math.max(0, Math.min(nextValue, sliderMax))
+    setMinRent(normalized)
+    if (normalized > maxRent) {
+      setMaxRent(normalized)
+    }
+  }
+
+  function handleMaxRentChange(nextValue: number) {
+    const normalized = Math.max(0, Math.min(nextValue, sliderMax))
+    setMaxRent(normalized)
+    if (normalized < minRent) {
+      setMinRent(normalized)
+    }
   }
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       return updatePreferences({
-        min_price:           0,
+        min_price:           minRent,
         max_price:           maxRent,
-        max_distance_miles:  distanceFromCampus[0],
+        max_distance_miles:  Number(distanceFromCampus[0]),
         price_rank:        featureOrder.indexOf("price") + 1,
         location_rank:     featureOrder.indexOf("location") + 1,
         rooms_rank:        featureOrder.indexOf("rooms") + 1,
@@ -65,11 +80,25 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
         notification_frequency: notificationFrequency,
       })
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.setQueryData(["preferences"], data)
       router.push("/listings")
     },
+    onError: () => {
+      setFormError("Could not save. Check your API base URL and backend availability.")
+    },
   })
+
+  function handleSave() {
+    setFormError(null)
+
+    if (maxRent < minRent) {
+      setFormError("Maximum rent cannot be lower than minimum rent.")
+      return
+    }
+
+    saveMutation.mutate()
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -81,71 +110,74 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
       </div>
 
       <div className="mx-auto flex w-full max-w-lg flex-col gap-8">
-        {/* Housing Type */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
-              <Users className="h-5 w-5 text-accent" />
-            </div>
-            <div>
-              <h3 className="font-display font-semibold text-foreground">Housing Type</h3>
-              <p className="text-sm text-muted-foreground">This adjusts pricing and listing types</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => handleHousingTypeChange("single")}
-              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
-                housingType === "single"
-                  ? "border-accent bg-accent/5 text-foreground"
-                  : "border-border bg-background text-muted-foreground hover:border-muted-foreground/30"
-              }`}
-            >
-              <User className={`h-6 w-6 ${housingType === "single" ? "text-accent" : "text-muted-foreground"}`} />
-              <span className="text-sm font-medium">Single</span>
-              <span className="text-xs text-muted-foreground">Individual rooms & shared</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleHousingTypeChange("married")}
-              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
-                housingType === "married"
-                  ? "border-accent bg-accent/5 text-foreground"
-                  : "border-border bg-background text-muted-foreground hover:border-muted-foreground/30"
-              }`}
-            >
-              <Heart className={`h-6 w-6 ${housingType === "married" ? "text-accent" : "text-muted-foreground"}`} />
-              <span className="text-sm font-medium">Married</span>
-              <span className="text-xs text-muted-foreground">Private apartments & homes</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Monthly Price Range */}
+        {/* Monthly Price Range (DB fields: min_price, max_price) */}
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
               <DollarSign className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-foreground">Maximum Monthly Rent</h3>
-              <p className="text-sm text-muted-foreground">
-                {housingType === "married" ? "Adjusted for couples housing" : "Per person pricing"}
-              </p>
+              <h3 className="font-display font-semibold text-foreground">Monthly Rent Range</h3>
+              <p className="text-sm text-muted-foreground">Set your minimum and maximum monthly budget</p>
             </div>
           </div>
-          <div className="mb-3 text-center">
-            <span className="font-display text-3xl font-bold text-foreground">${maxRent}</span>
-            <span className="ml-1 text-muted-foreground">/ month max</span>
+
+          <div className="mb-4 grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Min rent</span>
+              <input
+                type="number"
+                min={0}
+                max={sliderMax}
+                step={50}
+                value={minRent}
+                onChange={(event: any) => handleMinRentChange(Number(event.target.value) || 0)}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Max rent</span>
+              <input
+                type="number"
+                min={0}
+                max={sliderMax}
+                step={50}
+                value={maxRent}
+                onChange={(event: any) => handleMaxRentChange(Number(event.target.value) || 0)}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </label>
           </div>
-          <Slider
-            value={[maxRent]}
-            onValueChange={(val) => setMaxRent(val[0])}
-            min={0}
-            max={sliderMax}
-            step={50}
-          />
+
+          <div className="space-y-4">
+            <div>
+              <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                <span>Minimum</span>
+                <span>${minRent.toLocaleString()}</span>
+              </div>
+              <Slider
+                value={[minRent]}
+                onValueChange={(val: any) => handleMinRentChange(val[0])}
+                min={0}
+                max={sliderMax}
+                step={50}
+              />
+            </div>
+            <div>
+              <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                <span>Maximum</span>
+                <span>${maxRent.toLocaleString()}</span>
+              </div>
+              <Slider
+                value={[maxRent]}
+                onValueChange={(val: any) => handleMaxRentChange(val[0])}
+                min={0}
+                max={sliderMax}
+                step={50}
+              />
+            </div>
+          </div>
+
           <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>$0</span>
             <span>${sliderMax.toLocaleString()}</span>
@@ -252,7 +284,7 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
           </button>
           <button
             type="button"
-            onClick={() => saveMutation.mutate()}
+            onClick={handleSave}
             disabled={saveMutation.isPending}
             className="flex flex-1 items-center justify-center rounded-xl bg-accent py-3.5 text-center font-medium text-accent-foreground transition-colors hover:bg-accent/90 disabled:opacity-50"
           >
@@ -260,9 +292,9 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
           </button>
         </div>
 
-        {saveMutation.isError && (
+        {(saveMutation.isError || formError) && (
           <p className="text-center text-sm text-destructive">
-            Could not save. Check your API base URL and backend availability.
+            {formError ?? "Could not save. Check your API base URL and backend availability."}
           </p>
         )}
       </div>

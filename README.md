@@ -141,6 +141,11 @@ Open http://localhost:3000.
 3. Click Save
 4. Return to /preferences and verify your values persist
 
+Frontend implementation files for this flow:
+- `frontend/components/preferences/preference-ranking.tsx`
+- `frontend/components/preferences/preference-specifics.tsx`
+- `frontend/app/(app)/preferences/page.tsx`
+
 Check preferences in Postgres:
 
 ```bash

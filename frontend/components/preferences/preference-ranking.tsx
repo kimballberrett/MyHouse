@@ -1,5 +1,7 @@
 "use client"
 
+import type { ElementType } from "react"
+import { useState } from "react"
 import {
   DollarSign,
   MapPin,
@@ -11,7 +13,9 @@ import {
   ArrowDown,
 } from "lucide-react"
 
-const featureDefinitions: Record<string, { label: string; icon: React.ElementType }> = {
+type FeatureKey = "price" | "location" | "rooms" | "sociability" | "amenities"
+
+const featureDefinitions: Record<FeatureKey, { label: string; icon: ElementType }> = {
   price:       { label: "Price",       icon: DollarSign },
   location:    { label: "Location",    icon: MapPin },
   rooms:       { label: "Rooms",       icon: BedDouble },
@@ -26,6 +30,8 @@ interface PreferenceRankingProps {
 }
 
 export function PreferenceRanking({ featureOrder, setFeatureOrder, onNext }: PreferenceRankingProps) {
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+
   function moveUp(index: number) {
     if (index === 0) return
     const next = [...featureOrder]
@@ -40,6 +46,15 @@ export function PreferenceRanking({ featureOrder, setFeatureOrder, onNext }: Pre
     setFeatureOrder(next)
   }
 
+  function moveItem(fromIndex: number, toIndex: number) {
+    if (fromIndex === toIndex) return
+
+    const next = [...featureOrder]
+    const [moved] = next.splice(fromIndex, 1)
+    next.splice(toIndex, 0, moved)
+    setFeatureOrder(next)
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
@@ -47,18 +62,31 @@ export function PreferenceRanking({ featureOrder, setFeatureOrder, onNext }: Pre
           Rank Your Priorities
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Drag or use arrows to order features by importance. The top item matters most.
+          Drag to reorder, or use arrows. The top item is most important.
         </p>
       </div>
 
       <div className="mx-auto flex w-full max-w-md flex-col gap-3">
         {featureOrder.map((id, index) => {
-          const def = featureDefinitions[id]
+          const def = featureDefinitions[id as FeatureKey]
           const Icon = def.icon
           return (
             <div
               key={id}
-              className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:border-accent/50 hover:shadow-md"
+              draggable
+              onDragStart={() => setDraggedIndex(index)}
+              onDragEnd={() => setDraggedIndex(null)}
+              onDragOver={(event: any) => {
+                event.preventDefault()
+              }}
+              onDrop={() => {
+                if (draggedIndex == null) return
+                moveItem(draggedIndex, index)
+                setDraggedIndex(null)
+              }}
+              className={`group flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:border-accent/50 hover:shadow-md ${
+                draggedIndex === index ? "cursor-grabbing opacity-80" : "cursor-grab"
+              }`}
             >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-sm font-bold text-accent">
                 {index + 1}

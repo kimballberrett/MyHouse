@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users (
   user_id                SERIAL PRIMARY KEY,
   email                  VARCHAR(255) NOT NULL UNIQUE,
+  password_hash          VARCHAR(255) NOT NULL,
   phone_number           VARCHAR(50),
   created_at             TIMESTAMP DEFAULT NOW(),
   notification_frequency VARCHAR(50)

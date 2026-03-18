@@ -1,3 +1,5 @@
+import { getAuthenticatedUserId } from "@/lib/auth-client"
+
 export interface Preferences {
   preference_id?: number
   user_id?: number
@@ -35,28 +37,74 @@ export interface Notification {
   facebook_url?: string
 }
 
+export interface AuthUser {
+  user_id: number
+  email: string
+}
+
+interface LoginResponse {
+  user: AuthUser
+}
+
+export interface AuthPayload {
+  email: string
+  password: string
+}
+
+const DEFAULT_API_BASE_URL = "http://localhost:3001"
+
 function getApiBaseUrl(): string {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL
-  if (!base) {
-    throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured")
+  const configured = process.env.NEXT_PUBLIC_API_BASE_URL?.trim()
+  if (!configured) {
+    return DEFAULT_API_BASE_URL
   }
-  return base.replace(/\/+$/, "")
+
+  const normalized = configured.replace(/\/+$/, "")
+  // Allow users to set either host root or host/api.
+  return normalized.endsWith("/api")
+    ? normalized.slice(0, -4)
+    : normalized
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const userId = getAuthenticatedUserId()
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...(userId ? { "x-user-id": String(userId) } : {}),
       ...(init?.headers ?? {}),
     },
   })
 
   if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`)
+    let message = `Request failed with status ${response.status}`
+    try {
+      const payload = (await response.json()) as { error?: string }
+      if (payload?.error) {
+        message = payload.error
+      }
+    } catch {
+      // Keep default message when backend response is not JSON.
+    }
+    throw new Error(message)
   }
 
   return response.json() as Promise<T>
+}
+
+export function loginWithCredentials(payload: AuthPayload): Promise<LoginResponse> {
+  return requestJson<LoginResponse>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export function signupWithCredentials(payload: AuthPayload): Promise<LoginResponse> {
+  return requestJson<LoginResponse>("/api/auth/signup", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
 }
 
 export function getPreferences(): Promise<Preferences | null> {

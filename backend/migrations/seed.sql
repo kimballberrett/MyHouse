@@ -1,6 +1,11 @@
 -- Demo user (user_id=1)
-INSERT INTO users (email, phone_number, notification_frequency)
-VALUES ('demo@university.edu', '555-0100', 'daily');
+INSERT INTO users (email, password_hash, phone_number, notification_frequency)
+VALUES (
+  'demo@university.edu',
+  'scrypt$0f1e2d3c4b5a69788796a5b4c3d2e1f0$86894233de5a05caf4a4fd3795ca8bf818d6a974f6708e9add4d8ebffbee3c6b522b2abb57ee7648c6a3a68e604a29dfbdb816acf543425736e2c4c01d28f5fa',
+  '555-0100',
+  'daily'
+);
 
 -- Default preferences for demo user
 INSERT INTO user_preferences

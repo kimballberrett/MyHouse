@@ -1,8 +1,8 @@
-import { getAuthenticatedUserId } from "@/lib/auth-client"
+import { supabase } from "./supabase"
 
 export interface Preferences {
   preference_id?: number
-  user_id?: number
+  user_id?: string
   min_price?: number
   max_price?: number
   max_distance_miles?: number
@@ -37,95 +37,41 @@ export interface Notification {
   facebook_url?: string
 }
 
-export interface AuthUser {
-  user_id: number
-  email: string
+export async function getPreferences(): Promise<Preferences | null> {
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .select("*")
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  return data
 }
 
-interface LoginResponse {
-  user: AuthUser
-}
-
-export interface AuthPayload {
-  email: string
-  password: string
-}
-
-const DEFAULT_API_BASE_URL = "http://localhost:3001"
-
-function getApiBaseUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_API_BASE_URL?.trim()
-  if (!configured) {
-    return DEFAULT_API_BASE_URL
-  }
-
-  const normalized = configured.replace(/\/+$/, "")
-  // Allow users to set either host root or host/api.
-  return normalized.endsWith("/api")
-    ? normalized.slice(0, -4)
-    : normalized
-}
-
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const userId = getAuthenticatedUserId()
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(userId ? { "x-user-id": String(userId) } : {}),
-      ...(init?.headers ?? {}),
-    },
-  })
-
-  if (!response.ok) {
-    let message = `Request failed with status ${response.status}`
-    try {
-      const payload = (await response.json()) as { error?: string }
-      if (payload?.error) {
-        message = payload.error
-      }
-    } catch {
-      // Keep default message when backend response is not JSON.
-    }
-    throw new Error(message)
-  }
-
-  return response.json() as Promise<T>
-}
-
-export function loginWithCredentials(payload: AuthPayload): Promise<LoginResponse> {
-  return requestJson<LoginResponse>("/api/auth/login", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
-}
-
-export function signupWithCredentials(payload: AuthPayload): Promise<LoginResponse> {
-  return requestJson<LoginResponse>("/api/auth/signup", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
-}
-
-export function getPreferences(): Promise<Preferences | null> {
-  return requestJson<Preferences | null>("/api/preferences")
-}
-
-export function updatePreferences(
+export async function updatePreferences(
   payload: UpdatePreferencesPayload
 ): Promise<Preferences> {
-  return requestJson<Preferences>("/api/preferences", {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  })
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session?.user) throw new Error("Not authenticated — please sign in again.")
+
+  const user = session.user
+
+  const { data, error } = await supabase
+    .from("user_preferences")
+    .upsert({ user_id: user.id, ...payload }, { onConflict: "user_id" })
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data
 }
 
-export function getNotifications(): Promise<Notification[]> {
-  return requestJson<Notification[]>("/api/notifications")
+// Notifications not yet implemented
+export async function getNotifications(): Promise<Notification[]> {
+  return []
 }
 
-export function markAllNotificationsRead(): Promise<Notification[]> {
-  return requestJson<Notification[]>("/api/notifications/mark-all-read", {
-    method: "PUT",
-  })
+export async function markAllNotificationsRead(): Promise<Notification[]> {
+  return []
 }

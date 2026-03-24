@@ -1,0 +1,13 @@
+{
+  "name": "myhouse-scraper",
+  "version": "1.0.0",
+  "description": "Craigslist rental listing scraper for MyHouse",
+  "main": "run.js",
+  "scripts": {
+    "start": "node run.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0"
+  }
+}

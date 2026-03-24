@@ -53,6 +53,20 @@ export interface AuthPayload {
 
 const DEFAULT_API_BASE_URL = "http://localhost:3001"
 
+export interface Listing {
+  listing_id: number
+  title: string
+  street_address: string | null
+  city: string | null
+  montly_rent: number
+  num_bedrooms: number | null
+  num_bathrooms: number | null
+  description: string | null
+  date_scraped: string
+  source_url: string | null
+  image_url: string
+  amenities: string[]
+}
 function getApiBaseUrl(): string {
   const configured = process.env.NEXT_PUBLIC_API_BASE_URL?.trim()
   if (!configured) {
@@ -128,4 +142,8 @@ export function markAllNotificationsRead(): Promise<Notification[]> {
   return requestJson<Notification[]>("/api/notifications/mark-all-read", {
     method: "PUT",
   })
+}
+
+export function getListings(): Promise<Listing[]> {
+  return requestJson<Listing[]>("/api/listings")
 }

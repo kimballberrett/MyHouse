@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Slider } from "@/components/ui/slider"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { updatePreferences } from "@/lib/api"
-import { DollarSign, MapPin, Bell } from "lucide-react"
+import { DollarSign, MapPin, Bell, User, Heart } from "lucide-react"
 
 interface SavedPrefs {
   min_price?: number
@@ -21,25 +21,72 @@ interface PreferenceSpecificsProps {
   onBack: () => void
 }
 
+type HousingType = "single" | "married"
+
+const RENT_DEFAULTS: Record<HousingType, { min: number; max: number }> = {
+  // Approximate current student-range rents in Provo, UT.
+  single: { min: 450, max: 900 },
+  married: { min: 1200, max: 1800 },
+}
+
+const RENT_SLIDER_MAX: Record<HousingType, number> = {
+  single: 1600,
+  married: 2600,
+}
+
 export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: PreferenceSpecificsProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const [minRent, setMinRent] = useState(0)
-  const [maxRent, setMaxRent] = useState(800)
+  const [housingType, setHousingType] = useState<HousingType>("single")
+  const [minRent, setMinRent] = useState(RENT_DEFAULTS.single.min)
+  const [maxRent, setMaxRent] = useState(RENT_DEFAULTS.single.max)
+  const [minRentInput, setMinRentInput] = useState(String(RENT_DEFAULTS.single.min))
+  const [maxRentInput, setMaxRentInput] = useState(String(RENT_DEFAULTS.single.max))
   const [distanceFromCampus, setDistanceFromCampus] = useState([2])
   const [notificationFrequency, setNotificationFrequency] = useState("daily")
   const [formError, setFormError] = useState<string | null>(null)
+  const sliderMax = RENT_SLIDER_MAX[housingType]
+
+  function setRentRange(nextMin: number, nextMax: number, syncInputs = true, limit = sliderMax) {
+    const normalizedMin = Math.max(0, Math.min(nextMin, limit))
+    const normalizedMax = Math.max(0, Math.min(nextMax, limit))
+    const finalMin = Math.min(normalizedMin, normalizedMax)
+    const finalMax = Math.max(normalizedMin, normalizedMax)
+
+    setMinRent(finalMin)
+    setMaxRent(finalMax)
+
+    if (syncInputs) {
+      setMinRentInput(String(finalMin))
+      setMaxRentInput(String(finalMax))
+    }
+  }
+
+  function parseRentInput(value: string): number | null {
+    if (value.trim() === "") return null
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed)) return null
+    return Math.round(parsed)
+  }
 
   // Populate fields from saved preferences on load
   useEffect(() => {
     if (!savedPrefs) return
-    if (savedPrefs.min_price != null) {
-      setMinRent(savedPrefs.min_price)
-    }
-    if (savedPrefs.max_price != null) {
-      setMaxRent(savedPrefs.max_price)
-    }
+
+    const nextMin = savedPrefs.min_price ?? RENT_DEFAULTS.single.min
+    const nextMax = savedPrefs.max_price ?? RENT_DEFAULTS.single.max
+    const hasSavedRentPreference =
+      savedPrefs.min_price != null || savedPrefs.max_price != null
+    const inferredType: HousingType = hasSavedRentPreference
+      ? nextMax >= RENT_DEFAULTS.married.min
+        ? "married"
+        : "single"
+      : "single"
+
+    setHousingType(inferredType)
+    setRentRange(nextMin, nextMax, true, RENT_SLIDER_MAX[inferredType])
+
     if (savedPrefs.max_distance_miles != null) {
       setDistanceFromCampus([Number(savedPrefs.max_distance_miles)])
     }
@@ -48,22 +95,18 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
     }
   }, [savedPrefs])
 
-  const sliderMax = 3000
-
   function handleMinRentChange(nextValue: number) {
-    const normalized = Math.max(0, Math.min(nextValue, sliderMax))
-    setMinRent(normalized)
-    if (normalized > maxRent) {
-      setMaxRent(normalized)
-    }
+    setRentRange(nextValue, maxRent)
   }
 
   function handleMaxRentChange(nextValue: number) {
-    const normalized = Math.max(0, Math.min(nextValue, sliderMax))
-    setMaxRent(normalized)
-    if (normalized < minRent) {
-      setMinRent(normalized)
-    }
+    setRentRange(minRent, nextValue)
+  }
+
+  function handleHousingTypeChange(nextType: HousingType) {
+    setHousingType(nextType)
+    const defaults = RENT_DEFAULTS[nextType]
+    setRentRange(defaults.min, defaults.max, true, RENT_SLIDER_MAX[nextType])
   }
 
   const saveMutation = useMutation({
@@ -101,17 +144,18 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-5 md:gap-4">
       <div className="text-center">
-        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+        <h1 className="font-display text-lg font-bold tracking-tight text-foreground md:text-xl">
           Your Preferences
         </h1>
-        <p className="mt-2 text-muted-foreground">Fine-tune your housing search criteria.</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">Fine-tune your housing search criteria.</p>
       </div>
 
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-8">
-        {/* Monthly Price Range (DB fields: min_price, max_price) */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
+          {/* Monthly Price Range (DB fields: min_price, max_price) */}
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
               <DollarSign className="h-5 w-5 text-accent" />
@@ -119,6 +163,35 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
             <div>
               <h3 className="font-display font-semibold text-foreground">Monthly Rent Range</h3>
               <p className="text-sm text-muted-foreground">Set your minimum and maximum monthly budget</p>
+            </div>
+          </div>
+
+          <div className="mb-4 rounded-lg border border-border bg-background p-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleHousingTypeChange("single")}
+                className={`flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  housingType === "single"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <User className="h-4 w-4" />
+                Single
+              </button>
+              <button
+                type="button"
+                onClick={() => handleHousingTypeChange("married")}
+                className={`flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  housingType === "married"
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Heart className="h-4 w-4" />
+                Married
+              </button>
             </div>
           </div>
 
@@ -130,8 +203,23 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
                 min={0}
                 max={sliderMax}
                 step={50}
-                value={minRent}
-                onChange={(event: any) => handleMinRentChange(Number(event.target.value) || 0)}
+                value={minRentInput}
+                onChange={(event) => {
+                  const value = event.target.value
+                  setMinRentInput(value)
+                  const parsed = parseRentInput(value)
+                  if (parsed !== null) {
+                    setRentRange(parsed, maxRent, false)
+                  }
+                }}
+                onBlur={() => {
+                  const parsed = parseRentInput(minRentInput)
+                  if (parsed === null) {
+                    setMinRentInput(String(minRent))
+                    return
+                  }
+                  handleMinRentChange(parsed)
+                }}
                 className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
               />
             </label>
@@ -142,50 +230,49 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
                 min={0}
                 max={sliderMax}
                 step={50}
-                value={maxRent}
-                onChange={(event: any) => handleMaxRentChange(Number(event.target.value) || 0)}
+                value={maxRentInput}
+                onChange={(event) => {
+                  const value = event.target.value
+                  setMaxRentInput(value)
+                  const parsed = parseRentInput(value)
+                  if (parsed !== null) {
+                    setRentRange(minRent, parsed, false)
+                  }
+                }}
+                onBlur={() => {
+                  const parsed = parseRentInput(maxRentInput)
+                  if (parsed === null) {
+                    setMaxRentInput(String(maxRent))
+                    return
+                  }
+                  handleMaxRentChange(parsed)
+                }}
                 className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
               />
             </label>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                <span>Minimum</span>
-                <span>${minRent.toLocaleString()}</span>
-              </div>
-              <Slider
-                value={[minRent]}
-                onValueChange={(val: any) => handleMinRentChange(val[0])}
-                min={0}
-                max={sliderMax}
-                step={50}
-              />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                <span>Maximum</span>
-                <span>${maxRent.toLocaleString()}</span>
-              </div>
-              <Slider
-                value={[maxRent]}
-                onValueChange={(val: any) => handleMaxRentChange(val[0])}
-                min={0}
-                max={sliderMax}
-                step={50}
-              />
-            </div>
+          <div>
+            <Slider
+              value={[minRent, maxRent]}
+              onValueChange={(values) => {
+                if (values.length !== 2) return
+                setRentRange(values[0], values[1])
+              }}
+              min={0}
+              max={sliderMax}
+              step={50}
+            />
           </div>
 
           <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>$0</span>
             <span>${sliderMax.toLocaleString()}</span>
           </div>
-        </div>
+          </div>
 
-        {/* Distance from Campus */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          {/* Distance from Campus */}
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
               <MapPin className="h-5 w-5 text-accent" />
@@ -215,7 +302,7 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
             <span>0.5 mi</span>
             <span>10 mi</span>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
             {[0.5, 1, 2, 5, 10].map((dist) => (
               <button
                 key={dist}
@@ -230,34 +317,35 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
                 {dist} {dist === 1 ? "mile" : "miles"}
               </button>
             ))}
+            </div>
           </div>
         </div>
 
         {/* Notification Frequency */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
-              <Bell className="h-5 w-5 text-accent" />
+        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-3 flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10">
+              <Bell className="h-4.5 w-4.5 text-accent" />
             </div>
             <div>
               <h3 className="font-display font-semibold text-foreground">Notification Frequency</h3>
-              <p className="text-sm text-muted-foreground">How often would you like to be notified?</p>
+              <p className="text-xs text-muted-foreground">How often would you like to be notified?</p>
             </div>
           </div>
           <RadioGroup
             value={notificationFrequency}
             onValueChange={setNotificationFrequency}
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-2.5"
           >
             {[
-              { value: "every-new", label: "Every New Listing", desc: "Get notified instantly when a match is found" },
-              { value: "daily",     label: "Daily Updates",     desc: "Receive a daily summary of new listings" },
-              { value: "weekly",    label: "Weekly Updates",    desc: "Get a weekly roundup every Monday morning" },
-            ].map(({ value, label, desc }) => (
+              { value: "every-new", label: "Every New Listing" },
+              { value: "daily",     label: "Daily Updates" },
+              { value: "weekly",    label: "Weekly Updates" },
+            ].map(({ value, label }) => (
               <label
                 key={value}
                 htmlFor={value}
-                className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all ${
+                className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3 transition-all ${
                   notificationFrequency === value
                     ? "border-accent bg-accent/5"
                     : "border-border hover:border-muted-foreground/30"
@@ -265,8 +353,7 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
               >
                 <RadioGroupItem value={value} id={value} />
                 <div>
-                  <p className="font-medium text-foreground">{label}</p>
-                  <p className="text-sm text-muted-foreground">{desc}</p>
+                  <p className="text-sm font-medium leading-tight text-foreground">{label}</p>
                 </div>
               </label>
             ))}

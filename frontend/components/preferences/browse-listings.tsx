@@ -342,13 +342,13 @@ export function BrowseListings({ listings, preferences, listingsError }: BrowseL
           {filteredListings.map((listing) => (
             <ListingCard
               key={listing.listing_id}
-              name={listing.title}
+              title={listing.title}
               price={listing.montly_rent}
-              image={listing.image_url}
-              contracts={Math.max(1, listing.num_bedrooms ?? 1)}
-              amenities={listing.amenities ?? []}
-              distance={listing.city ?? "N/A"}
-              fbUrl={listing.source_url ?? "https://www.facebook.com/marketplace"}
+              beds={listing.num_bedrooms ?? null}
+              baths={listing.num_bathrooms ?? null}
+              city={listing.city ?? null}
+              distance="N/A"
+              listingUrl={listing.source_url ?? null}
             />
           ))}
         </div>

@@ -76,7 +76,7 @@ export default async function ListingsPage() {
               beds={listing.num_bedrooms}
               baths={listing.num_bathrooms}
               city={listing.city}
-              distance={formatDistance(listing.latitude, listing.longitude)}
+              distance={formatDistance(listing.latitude ?? null, listing.longitude ?? null)}
               listingUrl={listing.source_url}
             />
           ))}

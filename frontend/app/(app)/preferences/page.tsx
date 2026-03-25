@@ -40,11 +40,14 @@ export default function PreferencesPage() {
   }, [savedPrefs])
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 md:py-16">
+    <main className="mx-auto max-w-5xl px-4 py-6 md:py-8">
       {/* Step indicator */}
-      <div className="mx-auto mb-10 flex max-w-xs items-center gap-3">
+      <div className="mx-auto mb-5 flex max-w-xs items-center gap-3 md:mb-4">
         <div className="flex flex-1 flex-col items-center gap-2">
-          <div
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            aria-label="Go to rank priorities step"
             className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-colors ${
               step >= 1
                 ? "bg-accent text-accent-foreground"
@@ -52,7 +55,7 @@ export default function PreferencesPage() {
             }`}
           >
             1
-          </div>
+          </button>
           <span className="text-xs font-medium text-muted-foreground">Rank</span>
         </div>
 
@@ -63,7 +66,10 @@ export default function PreferencesPage() {
         />
 
         <div className="flex flex-1 flex-col items-center gap-2">
-          <div
+          <button
+            type="button"
+            onClick={() => setStep(2)}
+            aria-label="Go to details step"
             className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-colors ${
               step >= 2
                 ? "bg-accent text-accent-foreground"
@@ -71,7 +77,7 @@ export default function PreferencesPage() {
             }`}
           >
             2
-          </div>
+          </button>
           <span className="text-xs font-medium text-muted-foreground">Details</span>
         </div>
       </div>

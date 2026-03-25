@@ -210,7 +210,7 @@ psql -d myhouse -f backend/migrations/seed.sql
 
 **Not Complete:**
 - Scaper does not yet automatically update the database with new listings
-- Listings page does not yet retrieve data dynamically from the backend API--Listings pages does not yet exist! 
+- Listings page does not yet retrieve data dynamically from the backend API
 - Certify database deletion and population
 - Create notification system
 

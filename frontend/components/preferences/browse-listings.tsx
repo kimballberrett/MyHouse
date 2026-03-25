@@ -359,6 +359,7 @@ export function BrowseListings({
               city={listing.city ?? null}
               distance="N/A"
               listingUrl={listing.source_url ?? null}
+              imageUrl={listing.image_url ?? null}
             />
           ))}
         </div>

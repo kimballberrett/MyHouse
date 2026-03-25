@@ -214,3 +214,63 @@ psql -d myhouse -f backend/migrations/seed.sql
 - Certify database deletion and population
 - Create notification system
 
+- ## Features
+
+1. **User Login (Seeded Account)**
+   - `/login` accepts credentials
+   - Validates against `users.password_hash`
+   - Signs the user in on success
+
+2. **User Signup**
+   - “Create Account” tab on `/login`
+   - Creates a new user in the database with a hashed password
+   - Automatically signs the user in
+
+3. **Auth-Protected App Access**
+   - Middleware protects routes like `/preferences` and `/listings`
+   - Unauthenticated users are redirected to `/login`
+
+4. **Session Persistence + Logout**
+   - Auth cookie (`myhouse_user_id`) maintains session across pages
+   - “Log Out” clears the cookie and redirects to `/login`
+
+5. **Preferences Step 1 (Priority Ranking UI)**
+   - Users reorder 5 ranking factors:
+     - Price
+     - Location
+     - Rooms
+     - Sociability
+     - Amenities
+   - Continue to detailed preferences
+
+6. **Preferences Step 2 (Details + Save)**
+   - Users set:
+     - Rent range
+     - Distance
+     - Notification frequency
+   - Preferences are saved to the backend
+
+7. **Preferences Persistence**
+   - Returning to `/preferences` reloads saved values
+   - UI is pre-populated from the database
+
+8. **Browse Page (Real Listings API)**
+   - `/browse` fetches listings from `GET /api/listings`
+   - Includes joined data:
+     - First image
+     - Amenities
+
+9. **Browse Filtering UX**
+   - Filter popover supports:
+     - Price
+     - Beds
+     - Baths
+     - Amenities
+   - Shows live match count
+   - Includes **Apply** and **Reset**
+   - Updates visible listing cards dynamically
+
+10. **“My Matches” One-Click Filter**
+    - Available on `/browse`
+    - Applies user’s saved preferences instantly
+

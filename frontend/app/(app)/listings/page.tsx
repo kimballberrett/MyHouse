@@ -133,6 +133,7 @@ export default function ListingsPage() {
               city={listing.city}
               distance={formatDistance(listing.latitude, listing.longitude)}
               listingUrl={listing.source_url}
+              imageUrl={listing.image_url}
             />
           ))}
         </div>

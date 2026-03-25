@@ -11,6 +11,7 @@ export interface Listing {
   description: string | null
   date_scraped: string
   source_url: string | null
+  image_url: string | null
   latitude?: number | null
   longitude?: number | null
   amenities: string[]
@@ -26,7 +27,7 @@ export async function getListingsFromSupabase(
   let query = supabase
     .from("listings")
     .select(
-      "listing_id, title, street_address, city, montly_rent, num_bedrooms, num_bathrooms, description, date_scraped, source_url, latitude, longitude"
+      "listing_id, title, street_address, city, montly_rent, num_bedrooms, num_bathrooms, description, date_scraped, source_url, image_url, latitude, longitude"
     )
     .order("date_scraped", { ascending: false })
 
@@ -39,6 +40,7 @@ export async function getListingsFromSupabase(
 
   return (data ?? []).map((listing) => ({
     ...listing,
+    image_url: listing.image_url ?? null,
     amenities: [],
   }))
 }

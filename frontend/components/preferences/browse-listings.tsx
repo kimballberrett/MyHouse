@@ -8,12 +8,14 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import type { Listing, Preferences } from "@/lib/api"
+import type { Preferences } from "@/lib/api"
+import type { Listing } from "@/lib/listings"
 
 interface BrowseListingsProps {
   listings: Listing[] | undefined
   preferences: Preferences | null | undefined
   listingsError: boolean
+  listingsErrorMessage?: string
 }
 
 interface FilterState {
@@ -51,7 +53,12 @@ function filterListings(listings: Listing[], filters: FilterState): Listing[] {
   })
 }
 
-export function BrowseListings({ listings, preferences, listingsError }: BrowseListingsProps) {
+export function BrowseListings({
+  listings,
+  preferences,
+  listingsError,
+  listingsErrorMessage,
+}: BrowseListingsProps) {
   const safeListings = listings ?? []
   const [appliedFilters, setAppliedFilters] = useState<FilterState | null>(null)
   const [draftFilters, setDraftFilters] = useState<FilterState | null>(null)
@@ -175,7 +182,10 @@ export function BrowseListings({ listings, preferences, listingsError }: BrowseL
   if (listingsError) {
     return (
       <div className="rounded-xl border border-destructive/40 bg-card p-6 text-destructive">
-        Could not load listings right now. Please verify the backend is running.
+        Could not load listings right now. Please check Supabase data access and table policies.
+        {listingsErrorMessage ? (
+          <p className="mt-2 text-sm text-destructive/90">{listingsErrorMessage}</p>
+        ) : null}
       </div>
     )
   }

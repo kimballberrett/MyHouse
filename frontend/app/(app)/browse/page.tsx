@@ -2,10 +2,11 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { BrowseListings } from "@/components/preferences/browse-listings"
-import { getListings, getPreferences } from "@/lib/api"
+import { getPreferences } from "@/lib/api"
+import { getListingsFromSupabase } from "@/lib/listings"
 
 async function fetchListings() {
-  return getListings()
+  return getListingsFromSupabase()
 }
 
 async function fetchPreferences() {
@@ -13,19 +14,22 @@ async function fetchPreferences() {
 }
 
 export default function BrowsePage() {
-  const {
-    data: listings,
-    isLoading: listingsLoading,
-    isError: listingsError,
-  } = useQuery({
+  const listingsQuery = useQuery({
     queryKey: ["listings"],
     queryFn: fetchListings,
+    retry: false,
   })
 
-  const { data: preferences } = useQuery({
+  const preferencesQuery = useQuery({
     queryKey: ["preferences"],
     queryFn: fetchPreferences,
+    retry: false,
   })
+
+  const listingsErrorMessage =
+    listingsQuery.error instanceof Error
+      ? listingsQuery.error.message
+      : undefined
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 md:py-16">
@@ -38,15 +42,16 @@ export default function BrowsePage() {
         </p>
       </div>
 
-      {listingsLoading ? (
+      {listingsQuery.isLoading ? (
         <div className="rounded-xl border border-border bg-card p-6 text-muted-foreground">
           Loading listings...
         </div>
       ) : (
         <BrowseListings
-          listings={listings}
-          preferences={preferences}
-          listingsError={listingsError}
+          listings={listingsQuery.data}
+          preferences={preferencesQuery.data}
+          listingsError={listingsQuery.isError}
+          listingsErrorMessage={listingsErrorMessage}
         />
       )}
     </main>

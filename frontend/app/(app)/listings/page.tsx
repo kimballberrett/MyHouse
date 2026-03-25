@@ -1,9 +1,8 @@
-import { createClient } from "@supabase/supabase-js"
-
 export const dynamic = 'force-dynamic'
 import { ListingCard } from "@/components/listings/listing-card"
 import { Calendar, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
+import { getListingsFromSupabase } from "@/lib/listings"
 
 // BYU Provo campus coordinates — used for distance calculation
 const CAMPUS_LAT = 40.2518
@@ -29,19 +28,14 @@ function formatDistance(lat: number | null, lng: number | null): string {
 }
 
 export default async function ListingsPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
-  const { data: listings, error } = await supabase
-    .from("listings")
-    .select("listing_id, title, montly_rent, num_bedrooms, num_bathrooms, city, source_url, latitude, longitude")
-    .order("date_scraped", { ascending: false })
-    .limit(50)
-
-  if (error) {
-    console.error("Failed to load listings:", error.message)
+  let listings = null
+  try {
+    listings = await getListingsFromSupabase({ limit: 50 })
+  } catch (error) {
+    console.error(
+      "Failed to load listings:",
+      error instanceof Error ? error.message : "Unknown error"
+    )
   }
 
   return (
@@ -82,7 +76,7 @@ export default async function ListingsPage() {
               beds={listing.num_bedrooms}
               baths={listing.num_bathrooms}
               city={listing.city}
-              distance={formatDistance(listing.latitude, listing.longitude)}
+              distance={formatDistance(listing.latitude ?? null, listing.longitude ?? null)}
               listingUrl={listing.source_url}
             />
           ))}

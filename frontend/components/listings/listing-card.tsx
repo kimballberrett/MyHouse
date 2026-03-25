@@ -9,6 +9,7 @@ interface ListingCardProps {
   city: string | null
   distance: string
   listingUrl: string | null
+  imageUrl?: string | null
 }
 
 export function ListingCard({
@@ -19,16 +20,21 @@ export function ListingCard({
   city,
   distance,
   listingUrl,
+  imageUrl,
 }: ListingCardProps) {
   return (
     <div className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-accent/40 hover:shadow-lg">
       <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-        <Image
-          src="/placeholder.svg"
-          alt={`${title} housing listing`}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={`${title} housing listing`}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-muted" />
+        )}
         <div className="absolute left-3 top-3 rounded-lg bg-foreground/80 px-3 py-1 text-sm font-bold text-background backdrop-blur-sm">
           ${price.toLocaleString()}/mo
         </div>

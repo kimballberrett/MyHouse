@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Preferences } from "@/lib/api"
 import type { Listing } from "@/lib/listings"
 
@@ -273,39 +274,47 @@ export function BrowseListings({
 
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-accent">Bedrooms</h3>
-                <select
+                <Select
                   value={draftFilters?.bedrooms ?? "any"}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     setDraftFilters((prev) =>
-                      prev ? { ...prev, bedrooms: event.target.value } : prev
+                      prev ? { ...prev, bedrooms: value } : prev
                     )
                   }
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="any">Any</option>
-                  <option value="1">1+</option>
-                  <option value="2">2+</option>
-                  <option value="3">3+</option>
-                  <option value="4">4+</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any</SelectItem>
+                    <SelectItem value="1">1+</SelectItem>
+                    <SelectItem value="2">2+</SelectItem>
+                    <SelectItem value="3">3+</SelectItem>
+                    <SelectItem value="4">4+</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-accent">Bathrooms</h3>
-                <select
+                <Select
                   value={draftFilters?.bathrooms ?? "any"}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     setDraftFilters((prev) =>
-                      prev ? { ...prev, bathrooms: event.target.value } : prev
+                      prev ? { ...prev, bathrooms: value } : prev
                     )
                   }
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="any">Any</option>
-                  <option value="1">1+</option>
-                  <option value="2">2+</option>
-                  <option value="3">3+</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any</SelectItem>
+                    <SelectItem value="1">1+</SelectItem>
+                    <SelectItem value="2">2+</SelectItem>
+                    <SelectItem value="3">3+</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-3">

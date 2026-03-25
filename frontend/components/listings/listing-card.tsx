@@ -23,7 +23,7 @@ export function ListingCard({
   imageUrl,
 }: ListingCardProps) {
   return (
-    <div className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-accent/40 hover:shadow-lg">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-accent/40 hover:shadow-lg">
       <div className="relative aspect-[16/10] overflow-hidden bg-muted">
         {imageUrl ? (
           <Image
@@ -39,13 +39,15 @@ export function ListingCard({
         <div className="absolute left-3 top-3 rounded-lg bg-foreground/80 px-3 py-1 text-sm font-bold text-background backdrop-blur-sm">
           ${price.toLocaleString()}/mo
         </div>
-        <div className="absolute right-3 top-3 rounded-lg bg-accent/90 px-2.5 py-1 text-xs font-medium text-accent-foreground backdrop-blur-sm">
-          {distance} from campus
-        </div>
+        {distance !== "N/A" && (
+          <div className="absolute right-3 top-3 rounded-lg bg-accent/90 px-2.5 py-1 text-xs font-medium text-accent-foreground backdrop-blur-sm">
+            {distance} from campus
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col gap-3 p-5">
-        <div>
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <div className="flex-1">
           <h3 className="font-display text-lg font-semibold text-foreground line-clamp-2">
             {title}
           </h3>

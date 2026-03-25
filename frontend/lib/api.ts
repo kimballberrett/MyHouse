@@ -119,6 +119,12 @@ export async function markAllNotificationsRead(): Promise<Notification[]> {
   return []
 }
 
+async function requestJson<T>(path: string): Promise<T> {
+  const res = await fetch(`${getApiBaseUrl()}${path}`)
+  if (!res.ok) throw new Error(`Request failed: ${res.status} ${res.statusText}`)
+  return res.json() as Promise<T>
+}
+
 export function getListings(): Promise<Listing[]> {
   return requestJson<Listing[]>("/api/listings")
 }

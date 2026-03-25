@@ -202,11 +202,8 @@ The scraper will:
 - Preferences persist in database after saving
 - Browse page with real listings data
 - Frontend connected to database end-to-end
-
-### Sprint 3 — Complete
+- Switch to Supabase
 - Craigslist scraper collecting real listings into Supabase
-- Listing images scraped and displayed on cards
 - Listings page filters by saved user preferences
+- Listing images scraped and displayed on cards
 - Browse page with interactive filters and My Matches
-- App deployed on Vercel (production)
-- Migrated from local PostgreSQL + Express to Supabase

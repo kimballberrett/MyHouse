@@ -1,7 +1,13 @@
 const config = require("./config");
-const { fetchListings } = require("./craigslist");
+const { fetchListings, fetchListingImage } = require("./craigslist");
 const { upsertListing, getCount } = require("./db");
-const { upsertToDb } = require("./insert");
+const { upsertToDb, updateImageUrl } = require("./insert");
+
+const IMAGE_DELAY_MS = 300;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function main() {
   console.log(`Fetching listings from ${config.baseUrl} ...\n`);
@@ -47,11 +53,29 @@ async function main() {
     }
   }
 
-  console.log(`\nDone.`);
-  console.log(`  SQLite  — ${newLocal} new`);
+  console.log(`\nDone inserting.`);
+  console.log(`  SQLite   — ${newLocal} new`);
   console.log(`  Postgres — ${newDb} new`);
   console.log(`  Skipped  — ${dupCount} duplicates`);
   console.log(`  SQLite total: ${getCount()}`);
+
+  // --- Fetch images for all listings (visits each detail page) ---
+  console.log(`\nFetching images for ${listings.length} listings...`);
+  let imgFound = 0;
+  for (let i = 0; i < listings.length; i++) {
+    const listing = listings[i];
+    if (!listing.cl_id || !listing.url) continue;
+    await sleep(IMAGE_DELAY_MS);
+    const imageUrl = await fetchListingImage(listing.url);
+    if (imageUrl) {
+      await updateImageUrl(listing.cl_id, imageUrl);
+      imgFound++;
+    }
+    if ((i + 1) % 10 === 0) {
+      console.log(`  Progress: ${i + 1}/${listings.length} — images found so far: ${imgFound}`);
+    }
+  }
+  console.log(`  Images saved: ${imgFound}/${listings.length}`);
 }
 
 main().catch((err) => {

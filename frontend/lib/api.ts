@@ -42,6 +42,11 @@ export async function getPreferences(): Promise<Preferences | null> {
     .from("user_preferences")
     .select("*")
     .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  return data
+}
+
 export interface AuthUser {
   user_id: number
   email: string
@@ -83,10 +88,6 @@ function getApiBaseUrl(): string {
   return normalized.endsWith("/api")
     ? normalized.slice(0, -4)
     : normalized
-}
-
-  if (error) throw new Error(error.message)
-  return data
 }
 
 export async function updatePreferences(

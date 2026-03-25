@@ -40,7 +40,10 @@ CREATE TABLE listings (
   num_bathrooms  INTEGER,
   description    TEXT,
   date_scraped   TIMESTAMP DEFAULT NOW(),
-  source_url     VARCHAR(500)
+  source_url     VARCHAR(500),
+  source_id      VARCHAR(100) UNIQUE,
+  latitude       NUMERIC(10, 7),
+  longitude      NUMERIC(10, 7)
 );
 
 CREATE TABLE saved_listings (

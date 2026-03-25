@@ -1,0 +1,30 @@
+name: Craigslist Scraper
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # 6 AM UTC daily (~midnight Mountain Time)
+  workflow_dispatch:       # Allow manual trigger from the GitHub Actions tab
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'   # node:sqlite built-in requires Node 22+
+          cache: 'npm'
+          cache-dependency-path: scraper/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: scraper
+
+      - name: Run scraper
+        run: node run.js
+        working-directory: scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}

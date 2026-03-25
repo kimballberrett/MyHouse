@@ -1,0 +1,16 @@
+{
+  "name": "myhouse-scraper",
+  "version": "1.0.0",
+  "description": "Craigslist rental listing scraper for MyHouse",
+  "main": "run.js",
+  "scripts": {
+    "start": "node run.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.99.2",
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.3"
+  }
+}

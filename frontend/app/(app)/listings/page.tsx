@@ -1,56 +1,47 @@
+import { createClient } from "@supabase/supabase-js"
 import { ListingCard } from "@/components/listings/listing-card"
 import { Calendar, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
 
-const mockListings = [
-  {
-    name: "CollegeTown Apartments",
-    price: 450,
-    image: "/images/listing-1.jpg",
-    contracts: 4,
-    amenities: ["In-unit laundry", "Street parking", "Shared room"],
-    distance: "0.3 mi",
-    fbUrl: "https://www.facebook.com/marketplace",
-  },
-  {
-    name: "CollegeHouse",
-    price: 475,
-    image: "/images/listing-2.jpg",
-    contracts: 3,
-    amenities: ["In-unit laundry", "Parking garage"],
-    distance: "0.5 mi",
-    fbUrl: "https://www.facebook.com/marketplace",
-  },
-  {
-    name: "DormPlace",
-    price: 460,
-    image: "/images/listing-3.jpg",
-    contracts: 2,
-    amenities: ["Parking lot", "In-unit laundry"],
-    distance: "0.8 mi",
-    fbUrl: "https://www.facebook.com/marketplace",
-  },
-  {
-    name: "DormHouse",
-    price: 460,
-    image: "/images/listing-4.jpg",
-    contracts: 3,
-    amenities: ["Street parking", "In-unit laundry", "Shared room"],
-    distance: "1.2 mi",
-    fbUrl: "https://www.facebook.com/marketplace",
-  },
-  {
-    name: "DormsRUs",
-    price: 495,
-    image: "/images/listing-5.jpg",
-    contracts: 5,
-    amenities: ["Shared room", "Parking lot", "In-unit laundry"],
-    distance: "1.5 mi",
-    fbUrl: "https://www.facebook.com/marketplace",
-  },
-]
+// BYU Provo campus coordinates — used for distance calculation
+const CAMPUS_LAT = 40.2518
+const CAMPUS_LNG = -111.6493
 
-export default function ListingsPage() {
+// Haversine formula: returns distance in miles between two lat/lng points
+function distanceMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3958.8 // Earth radius in miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function formatDistance(lat: number | null, lng: number | null): string {
+  if (lat == null || lng == null) return "—"
+  const miles = distanceMiles(CAMPUS_LAT, CAMPUS_LNG, lat, lng)
+  return `${miles.toFixed(1)} mi`
+}
+
+export default async function ListingsPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  const { data: listings, error } = await supabase
+    .from("listings")
+    .select("listing_id, title, montly_rent, num_bedrooms, num_bathrooms, city, source_url, latitude, longitude")
+    .order("date_scraped", { ascending: false })
+    .limit(50)
+
+  if (error) {
+    console.error("Failed to load listings:", error.message)
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 md:py-16">
       <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -75,11 +66,26 @@ export default function ListingsPage() {
         </Link>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {mockListings.map((listing) => (
-          <ListingCard key={listing.name} {...listing} />
-        ))}
-      </div>
+      {!listings || listings.length === 0 ? (
+        <p className="text-center text-muted-foreground py-20">
+          No listings found. Check back after the next scrape.
+        </p>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {listings.map((listing) => (
+            <ListingCard
+              key={listing.listing_id}
+              title={listing.title}
+              price={listing.montly_rent}
+              beds={listing.num_bedrooms}
+              baths={listing.num_bathrooms}
+              city={listing.city}
+              distance={formatDistance(listing.latitude, listing.longitude)}
+              listingUrl={listing.source_url}
+            />
+          ))}
+        </div>
+      )}
     </main>
   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useEffect, useMemo, useState } from "react"
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Home, Mail, ShieldCheck, UserPlus } from "lucide-react"
@@ -17,10 +17,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { loginWithCredentials, signupWithCredentials } from "@/lib/api"
+import { supabase } from "@/lib/supabase"
 import { getAuthenticatedUserId, setAuthenticatedUserId } from "@/lib/auth-client"
 
-export default function LoginPage() {
+function LoginPageInner() {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -53,11 +53,12 @@ export default function LoginPage() {
 
     try {
       setIsSubmitting(true)
-      const response = await loginWithCredentials({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       })
-      setAuthenticatedUserId(response.user.user_id)
+      if (error) throw new Error(error.message)
+      setAuthenticatedUserId(data.user.id)
       router.push(nextPath)
       router.refresh()
     } catch (error) {
@@ -88,11 +89,13 @@ export default function LoginPage() {
 
     try {
       setIsSubmitting(true)
-      const response = await signupWithCredentials({
+      const { data, error } = await supabase.auth.signUp({
         email: signupEmail.trim(),
         password: signupPassword,
       })
-      setAuthenticatedUserId(response.user.user_id)
+      if (error) throw new Error(error.message)
+      if (!data.user) throw new Error("Could not create account. That email may already be in use.")
+      setAuthenticatedUserId(data.user.id)
       router.push(nextPath)
       router.refresh()
     } catch (error) {
@@ -282,5 +285,13 @@ export default function LoginPage() {
         </section>
       </main>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageInner />
+    </Suspense>
   )
 }

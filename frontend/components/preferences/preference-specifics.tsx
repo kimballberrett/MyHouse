@@ -127,8 +127,8 @@ export function PreferenceSpecifics({ featureOrder, savedPrefs, onBack }: Prefer
       queryClient.setQueryData(["preferences"], data)
       router.push("/listings")
     },
-    onError: () => {
-      setFormError("Could not save. Check your API base URL and backend availability.")
+    onError: (error: Error) => {
+      setFormError(error.message ?? "Could not save preferences.")
     },
   })
 

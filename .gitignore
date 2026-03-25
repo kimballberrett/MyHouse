@@ -11,5 +11,9 @@ node_modules/
 backend/.env
 .DS_Store
 
+# scraper
+scraper/listings.db
+
 # auto generated build cache
 tsconfig.tsbuildinfo
+.vercel

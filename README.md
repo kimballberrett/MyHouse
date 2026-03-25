@@ -1,132 +1,87 @@
-# OurHouse - College Housing Finder
+# MyHouse - College Housing Finder
 
 ## App Summary
 
-OurHouse helps college students discover off-campus housing in one place. Students set preferences such as budget, distance from campus, and ranking priorities; the app stores those settings in PostgreSQL and uses them to drive the housing experience.
+MyHouse helps college students find off-campus housing near BYU Provo. Students set preferences (budget, distance from campus, bedroom/bathroom counts), and the app uses those preferences to surface matching Craigslist listings scraped daily. A browse page lets users explore all listings with live filters.
+
+**Live app:** deployed on Vercel, backed by Supabase.
 
 ## Tech Stack
 
 ### Frontend
-- Next.js 16 (App Router)
+- Next.js 16 (App Router, client components with React Query)
 - React 19
 - TypeScript 5
 - Tailwind CSS 3 + shadcn/ui
 - TanStack React Query 5
 
-### Backend
-- Node.js 18+
-- Express 4
-- pg (node-postgres)
-
 ### Database
-- PostgreSQL 14+
+- Supabase (PostgreSQL) — `listings`, `user_preferences` tables
+- Auth via Supabase Auth (UUID user IDs)
+
+### Scraper
+- Node.js script (`scraper/`) — runs on demand or on a schedule
+- Fetches listings from Craigslist Provo (`provo.craigslist.org/search/apa`)
+- Extracts title, price, beds, baths, lat/lng from HTML + JSON-LD
+- Fetches individual listing pages to capture image URLs
+- Upserts to Supabase via `@supabase/supabase-js`
+- Local SQLite cache (`scraper/listings.db`) for deduplication
 
 ## Repository Layout
 
-- frontend/: Next.js app and all frontend configs
-- backend/: Express API and backend runtime config
-- backend/migrations/: schema and seed SQL files
+```
+frontend/   Next.js app, components, lib, app routes
+scraper/    Craigslist scraper (Node.js + Cheerio + Axios)
+backend/    Legacy Express API (superseded by Supabase direct access)
+```
 
 ## Prerequisites
 
-| Tool | Version | Install |
-|------|---------|---------|
-| Node.js | 18+ | https://nodejs.org |
-| npm | latest | bundled with Node.js |
-| PostgreSQL | 14+ | https://www.postgresql.org/download/ |
-| psql (CLI) | bundled with Postgres | verify with psql --version |
+| Tool | Version |
+|------|---------|
+| Node.js | 18+ |
+| npm | latest |
 
-Verify installed tools:
+## Deployment (Vercel)
+
+The app is deployed on Vercel. Key config in `vercel.json`:
+
+```json
+{
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/.next",
+  "framework": "nextjs"
+}
+```
+
+Environment variables required in Vercel dashboard:
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+## Local Development
+
+### 1. Install dependencies
 
 ```bash
-node --version
-npm --version
-psql --version
+npm install --legacy-peer-deps
 ```
 
-## Installation and Setup
-
-### 1. Create the database
-
-```bash
-createdb myhouse
-```
-
-### 2. Apply schema
-
-```bash
-psql -d myhouse -f backend/migrations/schema.sql
-```
-
-If your database already exists from an older setup, run:
-
-```bash
-psql -d myhouse -f backend/migrations/add_password_hash_to_users.sql
-```
-
-### 3. Seed database
-
-```bash
-psql -d myhouse -f backend/migrations/seed.sql
-```
-
-### 4. Configure backend environment
-
-```bash
-cp backend/.env.example backend/.env
-```
-
-Confirm values in backend/.env:
-
-```env
-DATABASE_URL=postgresql://localhost:5432/myhouse
-PORT=3001
-```
-
-### 5. Configure frontend environment
+### 2. Configure environment
 
 ```bash
 cp frontend/.env.example frontend/.env.local
 ```
 
-Required variable:
-
+Set in `frontend/.env.local`:
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 6. Install backend dependencies
-
-```bash
-cd backend
-npm install
-```
-
-### 7. Install frontend dependencies
-
-```bash
-cd frontend
-npm install
-```
-
-## Running the Application
-
-Use two terminals.
-
-### Terminal 1 - Backend
-
-```bash
-cd backend
-npm run dev
-```
-
-Expected log:
-
-```text
-Backend running on http://localhost:3001
-```
-
-### Terminal 2 - Frontend
+### 3. Run the frontend
 
 ```bash
 cd frontend
@@ -135,142 +90,123 @@ npm run dev
 
 Open http://localhost:3000.
 
-## Authentication
-
-- Protected app routes (`/preferences`, `/listings`, `/notifications`) require sign-in.
-- Go to `/login` and sign in with email + password from the `users` table.
-- If the user does not exist, use the `Create Account` button on the login page.
-- Seeded login: `demo@university.edu` / `demo1234`
-
-## Verifying the Vertical Slice
-
-### Preferences (End-to-End)
-
-1. Open http://localhost:3000/preferences
-2. Complete the two-step form:
-   - **Step 1 (Rank):** Drag to reorder the 5 factors (price, location, rooms, sociability, amenities)
-   - **Step 2 (Details):** Set budget (min/max price), distance from campus, and notification frequency
-3. Click Save
-4. Return to /preferences and verify your values persist
-
-Frontend implementation files for this flow:
-- `frontend/components/preferences/preference-ranking.tsx`
-- `frontend/components/preferences/preference-specifics.tsx`
-- `frontend/app/(app)/preferences/page.tsx`
-
-Check preferences in Postgres:
+## Running the Scraper
 
 ```bash
-psql -d myhouse -c "SELECT max_price, max_distance_miles, price_rank, location_rank FROM user_preferences WHERE user_id = 1;"
+cd scraper
+npm install
 ```
 
-Check notification frequency:
+Set environment variables (copy from Supabase dashboard):
+```env
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SECRET_KEY=your_supabase_service_role_key
+```
 
+Run:
 ```bash
-psql -d myhouse -c "SELECT notification_frequency FROM users WHERE user_id = 1;"
+node run.js
 ```
 
-### Listings & Notifications (UI Present, Backend In Progress)
+The scraper will:
+1. Fetch ~120 listings from Craigslist Provo
+2. Upsert all listings to Supabase
+3. Visit each listing's detail page to scrape the image URL (300ms delay between requests)
+4. Update `image_url` for each listing in Supabase
 
-- **Listings** (`/listings`): Currently displays 5 mock listings that match the seed data. Backend API for dynamic listings is planned.
-- **Notifications** (`/notifications`): The page renders correctly, but the GET `/api/notifications` and PUT `/api/notifications/mark-all-read` endpoints are not yet implemented. You can check seed data in the database:
+## Database Schema (Supabase)
 
-```bash
-psql -d myhouse -c "SELECT user_id, listing_id FROM saved_listings WHERE user_id = 1;"
-```
+### `listings`
+| Column | Type | Notes |
+|--------|------|-------|
+| listing_id | bigint | primary key |
+| title | text | |
+| city | text | parsed from Craigslist location string |
+| montly_rent | integer | |
+| num_bedrooms | integer | nullable |
+| num_bathrooms | integer | nullable |
+| source_url | text | Craigslist listing URL |
+| source_id | text | Craigslist post ID (unique key for upsert) |
+| image_url | text | scraped from listing detail page |
+| latitude | float | from JSON-LD structured data |
+| longitude | float | from JSON-LD structured data |
+| date_scraped | timestamptz | set on insert |
 
-## Reset Database
+### `user_preferences`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | primary key |
+| user_id | uuid | Supabase auth user ID |
+| min_price | integer | |
+| max_price | integer | |
+| max_distance_miles | float | distance from BYU campus |
 
-```bash
-psql -d myhouse -f backend/migrations/schema.sql
-psql -d myhouse -f backend/migrations/seed.sql
-```
+## App Routes
 
-## OKR's Sprint 1
-**Complete:**
-- Preference page allows user to navigate and select ranking and housing preferences  
-- User authentication allows users to create an account and log in successfully
-- Database exists with dummy data while we wait for webscraping function to work
-- File tree path is set up correctly and allows user to navigate easily through the site
+| Route | Description |
+|-------|-------------|
+| `/login` | Sign in or create account via Supabase Auth |
+| `/listings` | Daily summary — listings filtered by your saved preferences |
+| `/browse` | All listings with interactive filters (price, beds, baths) |
+| `/preferences` | Full preference setup (priority ranking + details) |
+| `/preferences/quick` | Quick-edit preferences inline |
 
-**Not Complete:**
-- Preferences data persists in the PostgreSQL database after saving  
-- Frontend and backend are connected for the preferences feature (end-to-end vertical slice)  
-- Listings page does not yet retrieve data dynamically from the backend API--Listings pages does not yet exist! 
-- Preference rankings and filters are not yet used to influence housing results
+## Features
 
-- ## OKR's Sprint 2
-**Complete:**
-- Preferences data persists in the PostgreSQL database after saving 
-- Frontend and backend are connected for the preferences feature (end-to-end vertical slice)  
-- Database exists with dummy data while we wait for webscraping function to work
-- File tree path is set up correctly and allows user to navigate easily through the site
-- Preference rankings and filters are not yet used to influence housing results
-- Browsing Page is complete
+### Authentication
+- Sign in / create account via Supabase Auth
+- Protected routes redirect unauthenticated users to `/login`
 
-**Not Complete:**
-- Scaper does not yet automatically update the database with new listings
-- Listings page does not yet retrieve data dynamically from the backend API
-- Certify database deletion and population
-- Create notification system
+### Listings Page (`/listings`)
+- Shows listings filtered by your saved preferences (price range, distance from BYU campus)
+- Calculates distance using Haversine formula from BYU coordinates (40.2518, -111.6493)
+- Prompts to set up preferences if none are saved
 
-- ## Features
+### Browse Page (`/browse`)
+- Shows all scraped listings (360+)
+- **My Matches** button: instantly applies your saved preference filters
+- **Filters popover**: live-updating filter panel with:
+  - Price range (min/max)
+  - Bedrooms (any / 1+ / 2+ / 3+ / 4+)
+  - Bathrooms (any / 1+ / 2+ / 3+)
+  - Amenities (when available)
+  - Live match count preview
+  - **Apply** to confirm, **Reset** to show all listings
 
-1. **User Login (Seeded Account)**
-   - `/login` accepts credentials
-   - Validates against `users.password_hash`
-   - Signs the user in on success
+### Listing Cards
+- Listing image (scraped from Craigslist detail pages, served directly from Craigslist CDN)
+- Price badge
+- Distance from BYU campus (listings page only)
+- Title, city, beds, baths
+- Link to original Craigslist listing
 
-2. **User Signup**
-   - “Create Account” tab on `/login`
-   - Creates a new user in the database with a hashed password
-   - Automatically signs the user in
+### Preferences
+- Full multi-step form: priority ranking + budget/distance details
+- Quick-edit page for fast updates
+- Preferences persist in Supabase and pre-populate on return visits
 
-3. **Auth-Protected App Access**
-   - Middleware protects routes like `/preferences` and `/listings`
-   - Unauthenticated users are redirected to `/login`
+### Scraper
+- Targets Provo Craigslist apartments ($300–$2500/mo)
+- Deduplicates by Craigslist post ID (`source_id`)
+- Scrapes images from individual listing detail pages with rate limiting
+- Safe to re-run — upserts on conflict, updates image URLs
 
-4. **Session Persistence + Logout**
-   - Auth cookie (`myhouse_user_id`) maintains session across pages
-   - “Log Out” clears the cookie and redirects to `/login`
+## OKR Progress
 
-5. **Preferences Step 1 (Priority Ranking UI)**
-   - Users reorder 5 ranking factors:
-     - Price
-     - Location
-     - Rooms
-     - Sociability
-     - Amenities
-   - Continue to detailed preferences
+### Sprint 1 — Complete
+- Preference page: ranking and housing preferences UI
+- User authentication: create account and sign in
+- File tree and navigation set up
 
-6. **Preferences Step 2 (Details + Save)**
-   - Users set:
-     - Rent range
-     - Distance
-     - Notification frequency
-   - Preferences are saved to the backend
+### Sprint 2 — Complete
+- Preferences persist in database after saving
+- Browse page with real listings data
+- Frontend connected to database end-to-end
 
-7. **Preferences Persistence**
-   - Returning to `/preferences` reloads saved values
-   - UI is pre-populated from the database
-
-8. **Browse Page (Real Listings API)**
-   - `/browse` fetches listings from `GET /api/listings`
-   - Includes joined data:
-     - First image
-     - Amenities
-
-9. **Browse Filtering UX**
-   - Filter popover supports:
-     - Price
-     - Beds
-     - Baths
-     - Amenities
-   - Shows live match count
-   - Includes **Apply** and **Reset**
-   - Updates visible listing cards dynamically
-
-10. **“My Matches” One-Click Filter**
-    - Available on `/browse`
-    - Applies user’s saved preferences instantly
-
+### Sprint 3 — Complete
+- Craigslist scraper collecting real listings into Supabase
+- Listing images scraped and displayed on cards
+- Listings page filters by saved user preferences
+- Browse page with interactive filters and My Matches
+- App deployed on Vercel (production)
+- Migrated from local PostgreSQL + Express to Supabase

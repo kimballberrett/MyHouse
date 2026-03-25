@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
+
+export const dynamic = 'force-dynamic'
 import { ListingCard } from "@/components/listings/listing-card"
 import { Calendar, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"

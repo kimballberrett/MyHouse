@@ -22,9 +22,24 @@ jobs:
         run: npm install
         working-directory: scraper
 
+      - name: Validate scraper environment
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "${SUPABASE_URL}" ]; then
+            echo "Missing SUPABASE_URL. Add repo secret SUPABASE_URL (or repo variable SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL)."
+            exit 1
+          fi
+          if [ -z "${SUPABASE_SECRET_KEY}" ]; then
+            echo "Missing Supabase key. Add SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY)."
+            exit 1
+          fi
+
       - name: Run scraper
         run: node run.js
         working-directory: scraper
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_ANON_KEY }}

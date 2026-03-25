@@ -1,16 +1,23 @@
+"use client"
+
 export const dynamic = 'force-dynamic'
-import { ListingCard } from "@/components/listings/listing-card"
+
+import { useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Calendar, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
+import { ListingCard } from "@/components/listings/listing-card"
+import { getPreferences } from "@/lib/api"
 import { getListingsFromSupabase } from "@/lib/listings"
+import type { Listing } from "@/lib/listings"
+import type { Preferences } from "@/lib/api"
 
-// BYU Provo campus coordinates — used for distance calculation
+// BYU Provo campus coordinates
 const CAMPUS_LAT = 40.2518
 const CAMPUS_LNG = -111.6493
 
-// Haversine formula: returns distance in miles between two lat/lng points
 function distanceMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 3958.8 // Earth radius in miles
+  const R = 3958.8
   const dLat = ((lat2 - lat1) * Math.PI) / 180
   const dLng = ((lng2 - lng1) * Math.PI) / 180
   const a =
@@ -21,22 +28,46 @@ function distanceMiles(lat1: number, lng1: number, lat2: number, lng2: number): 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-function formatDistance(lat: number | null, lng: number | null): string {
+function formatDistance(lat: number | null | undefined, lng: number | null | undefined): string {
   if (lat == null || lng == null) return "—"
   const miles = distanceMiles(CAMPUS_LAT, CAMPUS_LNG, lat, lng)
   return `${miles.toFixed(1)} mi`
 }
 
-export default async function ListingsPage() {
-  let listings = null
-  try {
-    listings = await getListingsFromSupabase({ limit: 50 })
-  } catch (error) {
-    console.error(
-      "Failed to load listings:",
-      error instanceof Error ? error.message : "Unknown error"
-    )
-  }
+function filterByPreferences(listings: Listing[], prefs: Preferences): Listing[] {
+  return listings.filter((listing) => {
+    if (prefs.min_price != null && listing.montly_rent < prefs.min_price) return false
+    if (prefs.max_price != null && listing.montly_rent > prefs.max_price) return false
+    if (prefs.max_distance_miles != null && listing.latitude != null && listing.longitude != null) {
+      const miles = distanceMiles(CAMPUS_LAT, CAMPUS_LNG, listing.latitude, listing.longitude)
+      if (miles > prefs.max_distance_miles) return false
+    }
+    return true
+  })
+}
+
+export default function ListingsPage() {
+  const listingsQuery = useQuery({
+    queryKey: ["listings"],
+    queryFn: () => getListingsFromSupabase(),
+    retry: false,
+  })
+
+  const preferencesQuery = useQuery({
+    queryKey: ["preferences"],
+    queryFn: getPreferences,
+    retry: false,
+  })
+
+  const filteredListings = useMemo(() => {
+    const listings = listingsQuery.data ?? []
+    const prefs = preferencesQuery.data
+    if (!prefs) return listings
+    return filterByPreferences(listings, prefs)
+  }, [listingsQuery.data, preferencesQuery.data])
+
+  const isLoading = listingsQuery.isLoading || preferencesQuery.isLoading
+  const hasPreferences = preferencesQuery.data != null
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 md:py-16">
@@ -50,7 +81,7 @@ export default async function ListingsPage() {
             {"Here's Your Daily Summary!"}
           </h1>
           <p className="mt-1 text-muted-foreground">
-            These are the top listings matching your requirements
+            Listings matching your saved preferences
           </p>
         </div>
         <Link
@@ -62,13 +93,37 @@ export default async function ListingsPage() {
         </Link>
       </div>
 
-      {!listings || listings.length === 0 ? (
-        <p className="text-center text-muted-foreground py-20">
-          No listings found. Check back after the next scrape.
-        </p>
+      {isLoading ? (
+        <p className="py-20 text-center text-sm text-muted-foreground">Loading...</p>
+      ) : !hasPreferences ? (
+        <div className="rounded-xl border border-border bg-card p-8 text-center">
+          <p className="font-medium text-foreground">No preferences set up yet</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Set your preferences so we can find listings that match.
+          </p>
+          <Link
+            href="/preferences"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+          >
+            Set Up Preferences
+          </Link>
+        </div>
+      ) : filteredListings.length === 0 ? (
+        <div className="rounded-xl border border-border bg-card p-8 text-center">
+          <p className="font-medium text-foreground">No listings match your preferences</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Try adjusting your price range or distance in preferences.
+          </p>
+          <Link
+            href="/preferences/quick"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+          >
+            Adjust Preferences
+          </Link>
+        </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {listings.map((listing) => (
+          {filteredListings.map((listing) => (
             <ListingCard
               key={listing.listing_id}
               title={listing.title}
@@ -76,7 +131,7 @@ export default async function ListingsPage() {
               beds={listing.num_bedrooms}
               baths={listing.num_bathrooms}
               city={listing.city}
-              distance={formatDistance(listing.latitude ?? null, listing.longitude ?? null)}
+              distance={formatDistance(listing.latitude, listing.longitude)}
               listingUrl={listing.source_url}
             />
           ))}

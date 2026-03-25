@@ -58,7 +58,7 @@ export default async function ListingsPage() {
           </p>
         </div>
         <Link
-          href="/preferences"
+          href="/preferences/quick"
           className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
         >
           <SlidersHorizontal className="h-4 w-4" />

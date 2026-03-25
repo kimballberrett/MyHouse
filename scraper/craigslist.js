@@ -43,7 +43,9 @@ async function fetchListings(config) {
     const location = $(el).find(".location").text().trim();
     const cl_id = extractPostId(url);
 
-    cards.push({ cl_id, title, price, location, url });
+    const imgEl = $(el).find("img").first();
+    const image_url = imgEl.attr("src") || imgEl.attr("data-src") || null;
+    cards.push({ cl_id, title, price, location, url, image_url });
   });
 
   // --- Extract JSON-LD structured data (Script[1] is the ItemList) ---
@@ -64,6 +66,7 @@ async function fetchListings(config) {
           latitude: item.latitude ?? null,
           longitude: item.longitude ?? null,
           property_type: item["@type"] ?? null,
+          image_url_ld: (Array.isArray(item.image) ? item.image[0] : item.image) ?? null,
         });
       }
     } catch {
@@ -74,8 +77,34 @@ async function fetchListings(config) {
   // --- Merge cards with structured data by index ---
   return cards.map((card, i) => {
     const structured = structuredByPosition.get(i) ?? {};
-    return { ...card, ...structured };
+    const { image_url_ld, ...rest } = structured;
+    return { ...card, ...rest, image_url: image_url_ld || card.image_url || null };
   });
 }
 
-module.exports = { fetchListings };
+// Fetch the first image from an individual Craigslist listing page.
+// Returns the image URL string or null if none found / request fails.
+async function fetchListingImage(url) {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const res = await axios.get(url, {
+      headers: HEADERS,
+      timeout: 8000,
+      signal: controller.signal,
+      maxRedirects: 3,
+    });
+    clearTimeout(timer);
+    const $ = cheerio.load(res.data);
+    const src =
+      $(".swipe-wrap img").first().attr("src") ||
+      $("figure img").first().attr("src") ||
+      $("#thumbs img").first().attr("src") ||
+      null;
+    return src;
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { fetchListings, fetchListingImage };

@@ -61,8 +61,9 @@ async function upsertToDb(listing) {
         source_id:     listing.cl_id,
         latitude:      listing.latitude  ?? null,
         longitude:     listing.longitude ?? null,
+        image_url:     listing.image_url ?? null,
       },
-      { onConflict: "source_id", ignoreDuplicates: true }
+      { onConflict: "source_id", ignoreDuplicates: false }
     )
     .select("listing_id");
 
@@ -70,4 +71,14 @@ async function upsertToDb(listing) {
   return data && data.length > 0;
 }
 
-module.exports = { upsertToDb };
+// Update image_url for an existing listing identified by source_id.
+async function updateImageUrl(cl_id, image_url) {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from("listings")
+    .update({ image_url })
+    .eq("source_id", cl_id);
+  if (error) throw new Error(`Image update error: ${error.message}`);
+}
+
+module.exports = { upsertToDb, updateImageUrl };

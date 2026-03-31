@@ -209,8 +209,9 @@ export function BrowseListings({
 
   return (
     <section>
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
+      <div className="mb-4 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
           <Button
             onClick={handleSeeMyMatches}
             className="inline-flex items-center gap-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
@@ -218,24 +219,26 @@ export function BrowseListings({
             <Sparkles className="h-4 w-4" />
             My Matches
           </Button>
-          Showing <span className="font-semibold text-foreground">{filteredListings.length}</span>{" "}
-          of <span className="font-semibold text-foreground">{safeListings.length}</span> listings
-        </div>
-        <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="inline-flex items-center gap-2 rounded-xl border-border bg-card text-foreground hover:bg-muted"
-            >
-              <SlidersHorizontal className="h-4 w-4 text-accent" />
-              Filters
-              {activeFilterCount > 0 ? (
-                <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
-                  {activeFilterCount}
-                </span>
-              ) : null}
-            </Button>
-          </PopoverTrigger>
+            <p className="text-xs sm:text-sm">
+              Showing <span className="font-semibold text-foreground">{filteredListings.length}</span>{" "}
+              of <span className="font-semibold text-foreground">{safeListings.length}</span> listings
+            </p>
+          </div>
+          <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border-border bg-card px-3 text-foreground hover:bg-muted sm:w-auto sm:justify-start"
+              >
+                <SlidersHorizontal className="h-4 w-4 shrink-0 text-accent" />
+                Filters
+                {activeFilterCount > 0 ? (
+                  <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
+                    {activeFilterCount}
+                  </span>
+                ) : null}
+              </Button>
+            </PopoverTrigger>
           <PopoverContent
             align="end"
             sideOffset={10}
@@ -346,7 +349,8 @@ export function BrowseListings({
               </div>
             </div>
           </PopoverContent>
-        </Popover>
+          </Popover>
+        </div>
       </div>
 
       {filteredListings.length === 0 ? (

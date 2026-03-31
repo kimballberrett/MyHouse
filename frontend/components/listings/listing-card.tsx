@@ -22,6 +22,8 @@ export function ListingCard({
   listingUrl,
   imageUrl,
 }: ListingCardProps) {
+  const isCraigslistLink = listingUrl?.toLowerCase().includes("craigslist.org")
+
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-accent/40 hover:shadow-lg">
       <div className="relative aspect-[16/10] overflow-hidden bg-muted">
@@ -81,7 +83,7 @@ export function ListingCard({
             rel="noopener noreferrer"
             className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-accent py-3 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
           >
-            View Listing
+            {isCraigslistLink ? "View on Craigslist" : "View Listing"}
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         ) : (

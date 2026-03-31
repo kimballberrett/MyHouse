@@ -18,6 +18,11 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 
+type NotificationWithListingLink = Notification & {
+  craigslist_url?: string
+  source_url?: string
+}
+
 function timeAgo(isoString: string): string {
   const now = Date.now()
   const then = new Date(isoString).getTime()
@@ -122,6 +127,14 @@ export default function NotificationsPage() {
           <div className="flex flex-col gap-3">
             {notifications.map((notification) => {
               const Icon = getNotificationIcon(notification.type)
+              const notificationWithLink = notification as NotificationWithListingLink
+              const externalListingUrl =
+                notificationWithLink.craigslist_url ??
+                notificationWithLink.source_url ??
+                notification.facebook_url
+              const isCraigslistLink = externalListingUrl
+                ?.toLowerCase()
+                .includes("craigslist.org")
               return (
                 <div
                   key={notification.id}
@@ -165,14 +178,14 @@ export default function NotificationsPage() {
                         {notification.description}
                       </p>
 
-                      {notification.facebook_url && (
+                      {externalListingUrl && (
                         <a
-                          href={notification.facebook_url}
+                          href={externalListingUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-accent transition-colors hover:text-accent/80"
                         >
-                          View on Facebook
+                          {isCraigslistLink ? "View on Craigslist" : "View listing"}
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       )}

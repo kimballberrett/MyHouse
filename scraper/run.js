@@ -2,6 +2,7 @@ const config = require("./config");
 const { fetchListings, fetchListingImage } = require("./craigslist");
 const { upsertListing, getCount } = require("./db");
 const { upsertToDb, updateImageUrl } = require("./insert");
+const { sendNotificationEmails } = require("./notify");
 
 const IMAGE_DELAY_MS = 300;
 
@@ -18,6 +19,7 @@ async function main() {
   let newLocal = 0;
   let newDb    = 0;
   let dupCount = 0;
+  const newListings = [];
 
   for (const listing of listings) {
     if (!listing.cl_id) continue;
@@ -43,6 +45,7 @@ async function main() {
     if (isNewLocal || isNewDb) {
       newLocal += isNewLocal ? 1 : 0;
       newDb    += isNewDb    ? 1 : 0;
+      if (isNewLocal) newListings.push(listing);
 
       const bed   = listing.beds  != null ? `${listing.beds}bd`  : "?bd";
       const bath  = listing.baths != null ? `${listing.baths}ba` : "?ba";
@@ -69,6 +72,7 @@ async function main() {
     const imageUrl = await fetchListingImage(listing.url);
     if (imageUrl) {
       await updateImageUrl(listing.cl_id, imageUrl);
+      listing.image_url = imageUrl;
       imgFound++;
     }
     if ((i + 1) % 10 === 0) {
@@ -76,6 +80,9 @@ async function main() {
     }
   }
   console.log(`  Images saved: ${imgFound}/${listings.length}`);
+
+  // --- Send email notifications for new listings ---
+  await sendNotificationEmails(newListings);
 }
 
 main().catch((err) => {

@@ -15,11 +15,11 @@ VALUES
 
 -- Listings
 INSERT INTO listings (title, street_address, city, montly_rent, num_bedrooms, num_bathrooms, description, source_url) VALUES
-  ('CollegeTown Apartments', '100 College Ave',      'Provo', 450, 1, 1, 'Great location near campus with modern amenities.',       'https://www.facebook.com/marketplace'),
-  ('CollegeHouse',           '200 University Blvd',  'Provo', 475, 2, 1, 'Spacious house with in-unit laundry and parking.',        'https://www.facebook.com/marketplace'),
-  ('DormPlace',              '300 Campus Dr',        'Provo', 460, 1, 1, 'Affordable dormitory-style housing close to campus.',     'https://www.facebook.com/marketplace'),
-  ('DormHouse',              '400 Dorm Ln',          'Provo', 460, 2, 2, 'Large house with multiple rooms and shared spaces.',      'https://www.facebook.com/marketplace'),
-  ('DormsRUs',               '500 Student Way',      'Provo', 495, 1, 1, 'Popular student housing with great community vibe.',      'https://www.facebook.com/marketplace');
+  ('CollegeTown Apartments', '100 College Ave',      'Provo', 450, 1, 1, 'Great location near campus with modern amenities.',       'https://provo.craigslist.org/search/apa'),
+  ('CollegeHouse',           '200 University Blvd',  'Provo', 475, 2, 1, 'Spacious house with in-unit laundry and parking.',        'https://provo.craigslist.org/search/apa'),
+  ('DormPlace',              '300 Campus Dr',        'Provo', 460, 1, 1, 'Affordable dormitory-style housing close to campus.',     'https://provo.craigslist.org/search/apa'),
+  ('DormHouse',              '400 Dorm Ln',          'Provo', 460, 2, 2, 'Large house with multiple rooms and shared spaces.',      'https://provo.craigslist.org/search/apa'),
+  ('DormsRUs',               '500 Student Way',      'Provo', 495, 1, 1, 'Popular student housing with great community vibe.',      'https://provo.craigslist.org/search/apa');
 
 -- Amenities
 INSERT INTO amenities (amenity_name) VALUES

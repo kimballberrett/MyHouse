@@ -4,7 +4,8 @@
   "description": "Craigslist rental listing scraper for MyHouse",
   "main": "run.js",
   "scripts": {
-    "start": "node run.js"
+    "start": "node run.js",
+    "summaries": "node daily-summary.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.2",

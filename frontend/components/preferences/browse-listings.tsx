@@ -89,11 +89,10 @@ export function BrowseListings({
     const normalizedMin = Math.max(priceBounds.min, Math.min(minRaw, priceBounds.max))
     const normalizedMax = Math.max(normalizedMin, Math.min(maxRaw, priceBounds.max))
 
-    const extraPrefs = pref as Record<string, unknown> | null | undefined
-    const minRooms = Number(extraPrefs?.min_rooms)
-    const minBathrooms = Number(extraPrefs?.min_bathrooms)
-    const savedAmenities = Array.isArray(extraPrefs?.amenities)
-      ? extraPrefs.amenities.filter((value): value is string => typeof value === "string")
+    const minRooms = Number(pref?.min_bedrooms)
+    const minBathrooms = Number(pref?.min_bathrooms)
+    const savedAmenities = Array.isArray(pref?.desired_amenities)
+      ? pref.desired_amenities.filter((value): value is string => typeof value === "string")
       : []
 
     return {

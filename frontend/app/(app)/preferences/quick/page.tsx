@@ -40,6 +40,8 @@ export default function QuickPreferencesPage() {
   const [minRent, setMinRent] = useState(0)
   const [maxRent, setMaxRent] = useState(800)
   const [distance, setDistance] = useState(2)
+  const [minBedrooms, setMinBedrooms] = useState(1)
+  const [minBathrooms, setMinBathrooms] = useState(1)
   const [notificationFrequency, setNotificationFrequency] = useState("daily")
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -83,6 +85,8 @@ export default function QuickPreferencesPage() {
     setMinRent(prefs.min_price ?? 0)
     setMaxRent(prefs.max_price ?? 800)
     setDistance(Number(prefs.max_distance_miles ?? 2))
+    setMinBedrooms(prefs.min_bedrooms ?? 1)
+    setMinBathrooms(prefs.min_bathrooms ?? 1)
     setNotificationFrequency(prefs.notification_frequency ?? "daily")
     setInitialized(true)
   }, [
@@ -106,6 +110,9 @@ export default function QuickPreferencesPage() {
         min_price: minRent,
         max_price: maxRent,
         max_distance_miles: distance,
+        min_bedrooms: minBedrooms,
+        min_bathrooms: minBathrooms,
+        desired_amenities: existing.desired_amenities ?? [],
         price_rank: existing.price_rank ?? DEFAULT_RANKS.price_rank,
         location_rank: existing.location_rank ?? DEFAULT_RANKS.location_rank,
         rooms_rank: existing.rooms_rank ?? DEFAULT_RANKS.rooms_rank,
@@ -218,8 +225,35 @@ export default function QuickPreferencesPage() {
             />
           </div>
 
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="quick-min-bedrooms">Minimum bedrooms</Label>
+              <Input
+                id="quick-min-bedrooms"
+                type="number"
+                min={1}
+                max={10}
+                step={1}
+                value={minBedrooms}
+                onChange={(event) => setMinBedrooms(Math.max(1, Number(event.target.value) || 1))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="quick-min-bathrooms">Minimum bathrooms</Label>
+              <Input
+                id="quick-min-bathrooms"
+                type="number"
+                min={1}
+                max={10}
+                step={1}
+                value={minBathrooms}
+                onChange={(event) => setMinBathrooms(Math.max(1, Number(event.target.value) || 1))}
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label>Notification frequency</Label>
+            <Label>Daily summary frequency</Label>
             <RadioGroup
               value={notificationFrequency}
               onValueChange={setNotificationFrequency}

@@ -6,18 +6,25 @@ export interface Preferences {
   min_price?: number
   max_price?: number
   max_distance_miles?: number
+  min_bedrooms?: number
+  min_bathrooms?: number
+  desired_amenities?: string[]
   price_rank?: number
   location_rank?: number
   rooms_rank?: number
   sociability_rank?: number
   amenities_rank?: number
   notification_frequency?: string
+  last_daily_summary_at?: string | null
 }
 
 export interface UpdatePreferencesPayload {
   min_price: number
   max_price: number
   max_distance_miles: number
+  min_bedrooms: number
+  min_bathrooms: number
+  desired_amenities: string[]
   price_rank: number
   location_rank: number
   rooms_rank: number

@@ -13,14 +13,14 @@ import {
   ArrowDown,
 } from "lucide-react"
 
-type FeatureKey = "price" | "location" | "rooms" | "sociability" | "amenities"
+type FeatureKey = "price" | "location" | "bedrooms" | "bathrooms" | "amenities"
 
 const featureDefinitions: Record<FeatureKey, { label: string; icon: ElementType }> = {
-  price:       { label: "Price",       icon: DollarSign },
-  location:    { label: "Location",    icon: MapPin },
-  rooms:       { label: "Rooms",       icon: BedDouble },
-  sociability: { label: "Sociability", icon: Users },
-  amenities:   { label: "Amenities",   icon: Wifi },
+  price:     { label: "Price", icon: DollarSign },
+  location:  { label: "Location", icon: MapPin },
+  bedrooms:  { label: "Bedrooms", icon: BedDouble },
+  bathrooms: { label: "Bathrooms", icon: Users },
+  amenities: { label: "Amenities", icon: Wifi },
 }
 
 interface PreferenceRankingProps {

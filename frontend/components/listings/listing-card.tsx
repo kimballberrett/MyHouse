@@ -10,6 +10,8 @@ interface ListingCardProps {
   distance: string
   listingUrl: string | null
   imageUrl?: string | null
+  matchScore?: number | null
+  summaryHighlights?: string[]
 }
 
 export function ListingCard({
@@ -21,6 +23,8 @@ export function ListingCard({
   distance,
   listingUrl,
   imageUrl,
+  matchScore,
+  summaryHighlights = [],
 }: ListingCardProps) {
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-accent/40 hover:shadow-lg">
@@ -48,6 +52,11 @@ export function ListingCard({
 
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex-1">
+          {matchScore != null ? (
+            <div className="mb-3 inline-flex rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
+              {matchScore.toFixed(1)} match score
+            </div>
+          ) : null}
           <h3 className="font-display text-lg font-semibold text-foreground line-clamp-2">
             {title}
           </h3>
@@ -73,6 +82,16 @@ export function ListingCard({
             </span>
           )}
         </div>
+
+        {summaryHighlights.length > 0 ? (
+          <div className="rounded-xl bg-muted/70 p-3 text-sm text-muted-foreground">
+            {summaryHighlights.slice(0, 2).map((highlight) => (
+              <p key={highlight} className="line-clamp-2">
+                {highlight}
+              </p>
+            ))}
+          </div>
+        ) : null}
 
         {listingUrl ? (
           <a

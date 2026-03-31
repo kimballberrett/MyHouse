@@ -6,7 +6,7 @@ import { PreferenceRanking } from "@/components/preferences/preference-ranking"
 import { PreferenceSpecifics } from "@/components/preferences/preference-specifics"
 import { getPreferences } from "@/lib/api"
 
-const DEFAULT_FEATURE_ORDER = ["price", "location", "rooms", "sociability", "amenities"]
+const DEFAULT_FEATURE_ORDER = ["price", "location", "bedrooms", "bathrooms", "amenities"]
 
 async function fetchPreferences() {
   return getPreferences()
@@ -27,8 +27,8 @@ export default function PreferencesPage() {
     const rankMap: Record<string, number | undefined> = {
       price:       savedPrefs.price_rank,
       location:    savedPrefs.location_rank,
-      rooms:       savedPrefs.rooms_rank,
-      sociability: savedPrefs.sociability_rank,
+      bedrooms:    savedPrefs.rooms_rank,
+      bathrooms:   savedPrefs.sociability_rank,
       amenities:   savedPrefs.amenities_rank,
     }
     if (Object.values(rankMap).every((v) => v != null)) {

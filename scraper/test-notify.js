@@ -5,6 +5,7 @@
 require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
 const { sendNotificationEmails } = require("./notify");
+const { uploadListingImage } = require("./storage");
 
 async function main() {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,7 +41,21 @@ async function main() {
   }));
 
   console.log(`Loaded ${mapped.length} real listings from Supabase.`);
-  await sendNotificationEmails(mapped, "kdber45@byu.edu");
+
+  // Re-host images in Supabase Storage so they load in emails
+  console.log("Uploading images to Supabase Storage (first 5 only for test)...");
+  const sample = mapped.slice(0, 5);
+  for (const listing of sample) {
+    if (listing.image_url && listing.image_url.includes("craigslist.org")) {
+      const stored = await uploadListingImage(listing.cl_id, listing.image_url);
+      if (stored) {
+        listing.image_url = stored;
+        console.log(`  Uploaded: ${listing.cl_id} → ${stored}`);
+      }
+    }
+  }
+
+  await sendNotificationEmails(sample, "kdber45@byu.edu");
 }
 
 main().catch((err) => console.error("Error:", err.message));

@@ -2,6 +2,7 @@ const config = require("./config");
 const { fetchListings, fetchListingImage } = require("./craigslist");
 const { upsertListing, getCount } = require("./db");
 const { upsertToDb, updateImageUrl } = require("./insert");
+const { uploadListingImage } = require("./storage");
 const { sendNotificationEmails } = require("./notify");
 
 const IMAGE_DELAY_MS = 300;
@@ -71,8 +72,9 @@ async function main() {
     await sleep(IMAGE_DELAY_MS);
     const imageUrl = await fetchListingImage(listing.url);
     if (imageUrl) {
-      await updateImageUrl(listing.cl_id, imageUrl);
-      listing.image_url = imageUrl;
+      const storageUrl = await uploadListingImage(listing.cl_id, imageUrl) || imageUrl;
+      await updateImageUrl(listing.cl_id, storageUrl);
+      listing.image_url = storageUrl;
       imgFound++;
     }
     if ((i + 1) % 10 === 0) {

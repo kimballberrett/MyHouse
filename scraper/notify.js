@@ -81,9 +81,8 @@ function buildListingCard(listing) {
     .filter(Boolean)
     .join(" · ");
 
-  const APP_URL = process.env.APP_URL || "https://myhouse-one.vercel.app";
   const imageHtml = listing.image_url
-    ? `<img src="${APP_URL}/api/image-proxy?url=${encodeURIComponent(listing.image_url)}" alt="Listing photo" width="560" style="width:100%;max-width:560px;height:200px;object-fit:cover;border-radius:8px 8px 0 0;display:block;" />`
+    ? `<img src="${listing.image_url}" alt="Listing photo" width="560" style="width:100%;max-width:560px;height:200px;object-fit:cover;border-radius:8px 8px 0 0;display:block;" />`
     : `<div style="width:100%;height:120px;background:#f3f4f6;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;"></div>`;
 
   return `

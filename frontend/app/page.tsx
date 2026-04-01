@@ -16,11 +16,11 @@ async function getStats(): Promise<{ users: number; listings: number }> {
   const supabase = createClient(url, key, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
-  const [{ count: userCount }, { count: listingCount }] = await Promise.all([
-    supabase.from("user_preferences").select("*", { count: "exact", head: true }),
+  const [{ data: authData }, { count: listingCount }] = await Promise.all([
+    supabase.auth.admin.listUsers(),
     supabase.from("listings").select("*", { count: "exact", head: true }),
   ])
-  return { users: userCount ?? 0, listings: listingCount ?? 0 }
+  return { users: authData?.users?.length ?? 0, listings: listingCount ?? 0 }
 }
 
 export default async function HomePage() {

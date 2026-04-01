@@ -61,8 +61,7 @@ function LoginPageInner() {
       })
       if (error) throw new Error(error.message)
       setAuthenticatedUserId(data.user.id)
-      router.push(nextPath)
-      router.refresh()
+      window.location.href = nextPath
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Invalid email or password."
@@ -97,8 +96,7 @@ function LoginPageInner() {
       if (error) throw new Error(error.message)
       if (!data.user) throw new Error("Could not create account. That email may already be in use.")
       setAuthenticatedUserId(data.user.id)
-      router.push(nextPath)
-      router.refresh()
+      window.location.href = nextPath
     } catch (error) {
       setErrorMessage(
         error instanceof Error

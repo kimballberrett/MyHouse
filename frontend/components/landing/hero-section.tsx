@@ -57,23 +57,6 @@ export function HeroSection() {
           </Button>
         </div>
 
-        {/* Stats row */}
-        <div className="mt-16 grid w-full max-w-2xl grid-cols-3 gap-8">
-          {[
-            { value: "500+", label: "Active Listings" },
-            { value: "2,000+", label: "Happy Students" },
-            { value: "50+", label: "Campus Partners" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-display text-2xl font-bold text-accent-foreground md:text-3xl">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-sm text-primary-foreground/60">
-                {stat.label}
-              </p>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   )

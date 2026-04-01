@@ -11,7 +11,6 @@ interface ListingCardProps {
   listingUrl: string | null
   imageUrl?: string | null
   matchScore?: number | null
-  summaryHighlights?: string[]
 }
 
 export function ListingCard({
@@ -24,7 +23,6 @@ export function ListingCard({
   listingUrl,
   imageUrl,
   matchScore,
-  summaryHighlights = [],
 }: ListingCardProps) {
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-accent/40 hover:shadow-lg">
@@ -83,17 +81,7 @@ export function ListingCard({
           )}
         </div>
 
-        {summaryHighlights.length > 0 ? (
-          <div className="rounded-xl bg-muted/70 p-3 text-sm text-muted-foreground">
-            {summaryHighlights.slice(0, 2).map((highlight) => (
-              <p key={highlight} className="line-clamp-2">
-                {highlight}
-              </p>
-            ))}
-          </div>
-        ) : null}
-
-        {listingUrl ? (
+{listingUrl ? (
           <a
             href={listingUrl}
             target="_blank"

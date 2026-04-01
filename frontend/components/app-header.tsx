@@ -49,7 +49,7 @@ export function AppHeader() {
             <Home className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="font-display text-xl font-bold tracking-tight text-foreground">
-            OurHouse
+            MyHouse
           </span>
         </Link>
 

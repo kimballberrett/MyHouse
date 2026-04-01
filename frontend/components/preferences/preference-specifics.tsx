@@ -124,9 +124,8 @@ export function PreferenceSpecifics({
     if (savedPrefs.max_distance_miles != null) {
       setDistanceFromCampus([Number(savedPrefs.max_distance_miles)])
     }
-    if (savedPrefs.notification_frequency) {
-      setNotificationFrequency(savedPrefs.notification_frequency)
-    }
+    const freq = savedPrefs.notification_frequency
+    setNotificationFrequency(freq === "none" ? "none" : "daily")
   }, [savedPrefs])
 
   function handleHousingTypeChange(nextType: HousingType) {
@@ -472,37 +471,29 @@ export function PreferenceSpecifics({
               <Bell className="h-4.5 w-4.5 text-accent" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-foreground">Daily Summary Frequency</h3>
+              <h3 className="font-display font-semibold text-foreground">Email Notifications</h3>
               <p className="text-xs text-muted-foreground">
-                Choose how often we should refresh your top 10 summary.
+                Would you like to receive daily email notifications for new listings?
               </p>
             </div>
           </div>
 
-          <RadioGroup
-            value={notificationFrequency}
-            onValueChange={setNotificationFrequency}
-            className="flex flex-col gap-2.5"
-          >
-            {[
-              { value: "every-new", label: "Every New Listing" },
-              { value: "daily", label: "Daily Updates" },
-              { value: "weekly", label: "Weekly Updates" },
-            ].map(({ value, label }) => (
-              <label
+          <div className="flex gap-3">
+            {[{ value: "daily", label: "Yes" }, { value: "none", label: "No" }].map(({ value, label }) => (
+              <button
                 key={value}
-                htmlFor={value}
-                className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3 transition-all ${
+                type="button"
+                onClick={() => setNotificationFrequency(value)}
+                className={`flex-1 rounded-xl border-2 py-3 text-sm font-medium transition-all ${
                   notificationFrequency === value
-                    ? "border-accent bg-accent/5"
-                    : "border-border hover:border-muted-foreground/30"
+                    ? "border-accent bg-accent/5 text-accent"
+                    : "border-border text-muted-foreground hover:border-muted-foreground/30"
                 }`}
               >
-                <RadioGroupItem value={value} id={value} />
-                <p className="text-sm font-medium leading-tight text-foreground">{label}</p>
-              </label>
+                {label}
+              </button>
             ))}
-          </RadioGroup>
+          </div>
         </div>
 
         <div className="flex gap-3">

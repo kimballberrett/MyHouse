@@ -4,11 +4,11 @@ export const dynamic = "force-dynamic"
 
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Calendar, SlidersHorizontal, Sparkles } from "lucide-react"
+import { SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
 import { ListingCard } from "@/components/listings/listing-card"
 import { getPreferences } from "@/lib/api"
-import { getTopListingMatches, getSummaryFrequencyLabel, isSummaryDue } from "@/lib/listing-summary"
+import { getTopListingMatches } from "@/lib/listing-summary"
 import { getListingsFromSupabase } from "@/lib/listings"
 
 export default function ListingsPage() {
@@ -29,40 +29,22 @@ export default function ListingsPage() {
     const preferences = preferencesQuery.data
 
     if (!preferences) return []
-    return getTopListingMatches(listings, preferences, 10)
+    return getTopListingMatches(listings, preferences, listings.length)
   }, [listingsQuery.data, preferencesQuery.data])
 
   const isLoading = listingsQuery.isLoading || preferencesQuery.isLoading
   const preferences = preferencesQuery.data
   const hasPreferences = preferences != null
-  const summaryDue = preferences
-    ? isSummaryDue(preferences.notification_frequency, preferences.last_daily_summary_at)
-    : false
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 md:py-16">
       <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
-              <Calendar className="h-3 w-3" />
-              Daily Summary
-            </div>
-            {preferences ? (
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-                <Sparkles className="h-3 w-3 text-accent" />
-                {getSummaryFrequencyLabel(preferences.notification_frequency)}
-                {summaryDue ? " refresh due" : " cadence active"}
-              </div>
-            ) : null}
-          </div>
-
           <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-            Your Top 10 Best-Fit Listings
+            Listings Ranked for You
           </h1>
           <p className="mt-1 max-w-2xl text-muted-foreground">
-            We score every listing against your ranked priorities and saved criteria, then surface
-            the strongest matches first.
+            Ranked by how well they match your saved preferences
           </p>
         </div>
 
@@ -105,27 +87,6 @@ export default function ListingsPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Summary cadence</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">
-                  {getSummaryFrequencyLabel(preferences.notification_frequency)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Top listing score</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">
-                  {scoredListings[0]?.matchScore.toFixed(1) ?? "0.0"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Listings surfaced</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{scoredListings.length}</p>
-              </div>
-            </div>
-          </div>
-
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {scoredListings.map((listing) => (
               <ListingCard
@@ -139,7 +100,6 @@ export default function ListingsPage() {
                 listingUrl={listing.source_url}
                 imageUrl={listing.image_url}
                 matchScore={listing.matchScore}
-                summaryHighlights={listing.matchHighlights}
               />
             ))}
           </div>

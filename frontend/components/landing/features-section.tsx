@@ -17,13 +17,13 @@ const features = [
     icon: Bell,
     title: "Smart Notifications",
     description:
-      "Choose how often you hear from us: every new match, daily digests, or weekly roundups. Stay informed on your terms.",
+      "Choose whether you want to receive notifications for new matches. Stay informed on your terms.",
   },
   {
     icon: Search,
     title: "Facebook Marketplace Integration",
     description:
-      "Every listing links directly to the original Facebook post so you can contact landlords and get more details instantly.",
+      "Every listing links directly to the original source post so you can contact landlords and get more details instantly.",
   },
 ]
 

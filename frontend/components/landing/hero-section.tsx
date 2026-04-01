@@ -5,7 +5,7 @@ import Image from "next/image"
 import { ArrowRight, Search, Shield, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export function HeroSection() {
+export function HeroSection({ userCount, listingCount }: { userCount: number; listingCount: number }) {
   return (
     <section className="relative overflow-hidden">
       {/* Hero image background */}
@@ -22,7 +22,7 @@ export function HeroSection() {
 
       <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-4 pb-24 pt-20 text-center md:pb-32 md:pt-28">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent-foreground backdrop-blur-sm">
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-3.5 w-3.5" aria-hidden="true" />
           <span>College Housing Made Simple</span>
         </div>
 
@@ -44,7 +44,7 @@ export function HeroSection() {
           >
             <Link href="/preferences">
               Set Your Preferences
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
           <Button
@@ -57,6 +57,23 @@ export function HeroSection() {
           </Button>
         </div>
 
+        {/* Stats row */}
+        <div className="mt-16 grid w-full max-w-2xl grid-cols-3 gap-8">
+          {[
+            { value: listingCount.toLocaleString(), label: "Active Listings" },
+            { value: userCount.toLocaleString(), label: "Happy Students" },
+            { value: "2", label: "Campus Partners" },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <p className="font-display text-2xl font-bold text-accent-foreground md:text-3xl">
+                {stat.value}
+              </p>
+              <p className="mt-1 text-sm text-primary-foreground/60">
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )

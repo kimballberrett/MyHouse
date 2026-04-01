@@ -48,7 +48,7 @@ export function FeaturesSection() {
               className="group rounded-2xl border border-border bg-card p-8 transition-all hover:border-accent/50 hover:shadow-lg"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
-                <feature.icon className="h-6 w-6 text-accent" />
+                <feature.icon className="h-6 w-6 text-accent" aria-hidden="true" />
               </div>
               <h3 className="mt-5 font-display text-lg font-semibold text-foreground">
                 {feature.title}

@@ -46,14 +46,14 @@ export function AppHeader() {
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Home className="h-5 w-5 text-primary-foreground" />
+            <Home className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
           </div>
           <span className="font-display text-xl font-bold tracking-tight text-foreground">
             MyHouse
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Main navigation" className="hidden items-center gap-1 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -80,16 +80,15 @@ export function AppHeader() {
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Open menu</span>
+            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open navigation menu">
+              <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-72">
             <SheetTitle className="font-display text-lg font-bold">
               Menu
             </SheetTitle>
-            <nav className="mt-6 flex flex-col gap-2">
+            <nav aria-label="Mobile navigation" className="mt-6 flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}

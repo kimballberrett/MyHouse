@@ -291,6 +291,7 @@ export function BrowseListings({
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-accent">Bedrooms</h3>
                 <select
+                  aria-label="Minimum bedrooms"
                   value={draftFilters?.bedrooms ?? "any"}
                   onChange={(event) =>
                     setDraftFilters((prev) =>
@@ -310,6 +311,7 @@ export function BrowseListings({
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-accent">Bathrooms</h3>
                 <select
+                  aria-label="Minimum bathrooms"
                   value={draftFilters?.bathrooms ?? "any"}
                   onChange={(event) =>
                     setDraftFilters((prev) =>

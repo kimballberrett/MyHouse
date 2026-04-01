@@ -60,7 +60,7 @@ export function ListingCard({
           </h3>
           {city && (
             <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-              <MapPin className="h-3 w-3 shrink-0" />
+              <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
               {city}
             </p>
           )}
@@ -69,13 +69,13 @@ export function ListingCard({
         <div className="flex gap-3 text-sm text-muted-foreground">
           {beds != null && (
             <span className="flex items-center gap-1">
-              <BedDouble className="h-4 w-4" />
+              <BedDouble className="h-4 w-4" aria-hidden="true" />
               {beds} {beds === 1 ? "bed" : "beds"}
             </span>
           )}
           {baths != null && (
             <span className="flex items-center gap-1">
-              <Bath className="h-4 w-4" />
+              <Bath className="h-4 w-4" aria-hidden="true" />
               {baths} {baths === 1 ? "bath" : "baths"}
             </span>
           )}
@@ -86,10 +86,11 @@ export function ListingCard({
             href={listingUrl}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={`View listing: ${title}`}
             className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-accent py-3 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
           >
             View Listing
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           </a>
         ) : (
           <div className="mt-1 flex items-center justify-center rounded-xl bg-muted py-3 text-sm text-muted-foreground">

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { SlidersHorizontal, Sparkles } from "lucide-react"
+import { SlidersHorizontal } from "lucide-react"
 import { ListingCard } from "@/components/listings/listing-card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -65,6 +65,8 @@ export function BrowseListings({
   const [defaultFilters, setDefaultFilters] = useState<FilterState | null>(null)
   const [initializedDefaults, setInitializedDefaults] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [minPriceInput, setMinPriceInput] = useState("")
+  const [maxPriceInput, setMaxPriceInput] = useState("")
 
   const priceBounds = useMemo(() => {
     if (safeListings.length === 0) {
@@ -117,6 +119,8 @@ export function BrowseListings({
     setDefaultFilters(initial)
     setDraftFilters(initial)
     setAppliedFilters(initial)
+    setMinPriceInput(String(initial.minPrice))
+    setMaxPriceInput(String(initial.maxPrice))
     setInitializedDefaults(true)
   }, [amenityOptions, initializedDefaults, preferences, priceBounds, safeListings.length])
 
@@ -130,20 +134,26 @@ export function BrowseListings({
     return filterListings(safeListings, draftFilters).length
   }, [draftFilters, safeListings])
 
-  function updateDraftMinPrice(value: number) {
+  function commitMinPrice() {
     if (!draftFilters) return
-    if (!Number.isFinite(value)) return
+    const value = Number(minPriceInput)
+    if (!Number.isFinite(value)) { setMinPriceInput(String(draftFilters.minPrice)); return }
     const nextMin = Math.max(priceBounds.min, Math.min(value, priceBounds.max))
     const nextMax = Math.max(nextMin, draftFilters.maxPrice)
     setDraftFilters({ ...draftFilters, minPrice: nextMin, maxPrice: nextMax })
+    setMinPriceInput(String(nextMin))
+    setMaxPriceInput(String(nextMax))
   }
 
-  function updateDraftMaxPrice(value: number) {
+  function commitMaxPrice() {
     if (!draftFilters) return
-    if (!Number.isFinite(value)) return
+    const value = Number(maxPriceInput)
+    if (!Number.isFinite(value)) { setMaxPriceInput(String(draftFilters.maxPrice)); return }
     const nextMax = Math.max(priceBounds.min, Math.min(value, priceBounds.max))
     const nextMin = Math.min(nextMax, draftFilters.minPrice)
     setDraftFilters({ ...draftFilters, minPrice: nextMin, maxPrice: nextMax })
+    setMinPriceInput(String(nextMin))
+    setMaxPriceInput(String(nextMax))
   }
 
   function toggleAmenity(amenity: string, checked: boolean) {
@@ -175,13 +185,8 @@ export function BrowseListings({
     }
     setDraftFilters(cleared)
     setAppliedFilters(cleared)
-  }
-
-  function handleSeeMyMatches() {
-    const matches = buildFiltersFromPreferences(preferences)
-    setDefaultFilters(matches)
-    setDraftFilters(matches)
-    setAppliedFilters(matches)
+    setMinPriceInput(String(cleared.minPrice))
+    setMaxPriceInput(String(cleared.maxPrice))
   }
 
   if (listingsError) {
@@ -210,13 +215,6 @@ export function BrowseListings({
     <section>
       <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <Button
-            onClick={handleSeeMyMatches}
-            className="inline-flex items-center gap-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
-          >
-            <Sparkles className="h-4 w-4" />
-            My Matches
-          </Button>
           Showing <span className="font-semibold text-foreground">{filteredListings.length}</span>{" "}
           of <span className="font-semibold text-foreground">{safeListings.length}</span> listings
         </div>
@@ -256,10 +254,9 @@ export function BrowseListings({
                     <Input
                       id="browse-min-price"
                       type="number"
-                      min={priceBounds.min}
-                      max={priceBounds.max}
-                      value={draftFilters?.minPrice ?? priceBounds.min}
-                      onChange={(event) => updateDraftMinPrice(Number(event.target.value))}
+                      value={minPriceInput}
+                      onChange={(e) => setMinPriceInput(e.target.value)}
+                      onBlur={commitMinPrice}
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -267,10 +264,9 @@ export function BrowseListings({
                     <Input
                       id="browse-max-price"
                       type="number"
-                      min={priceBounds.min}
-                      max={priceBounds.max}
-                      value={draftFilters?.maxPrice ?? priceBounds.max}
-                      onChange={(event) => updateDraftMaxPrice(Number(event.target.value))}
+                      value={maxPriceInput}
+                      onChange={(e) => setMaxPriceInput(e.target.value)}
+                      onBlur={commitMaxPrice}
                     />
                   </div>
                 </div>
@@ -279,6 +275,7 @@ export function BrowseListings({
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-accent">Bedrooms</h3>
                 <select
+                  aria-label="Minimum bedrooms"
                   value={draftFilters?.bedrooms ?? "any"}
                   onChange={(event) =>
                     setDraftFilters((prev) =>
@@ -298,6 +295,7 @@ export function BrowseListings({
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-accent">Bathrooms</h3>
                 <select
+                  aria-label="Minimum bathrooms"
                   value={draftFilters?.bathrooms ?? "any"}
                   onChange={(event) =>
                     setDraftFilters((prev) =>

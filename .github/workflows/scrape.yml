@@ -2,7 +2,7 @@ name: Craigslist Scraper
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # 6 AM UTC daily (~midnight Mountain Time)
+    - cron: '0 14 * * *'  # 8 AM MDT (UTC-6) daily
   workflow_dispatch:       # Allow manual trigger from the GitHub Actions tab
 
 jobs:
@@ -43,3 +43,5 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL || vars.SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}

@@ -21,7 +21,7 @@ export function CTASection() {
           >
             <Link href="/preferences">
               Get Started Now
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
         </div>

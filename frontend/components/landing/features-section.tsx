@@ -17,13 +17,13 @@ const features = [
     icon: Bell,
     title: "Smart Notifications",
     description:
-      "Choose how often you hear from us: every new match, daily digests, or weekly roundups. Stay informed on your terms.",
+      "Choose whether you want to receive notifications for new matches. Stay informed on your terms.",
   },
   {
     icon: Search,
     title: "Facebook Marketplace Integration",
     description:
-      "Every listing links directly to the original Facebook post so you can contact landlords and get more details instantly.",
+      "Every listing links directly to the original source post so you can contact landlords and get more details instantly.",
   },
 ]
 
@@ -33,7 +33,7 @@ export function FeaturesSection() {
       <div className="mx-auto max-w-5xl px-4">
         <div className="text-center">
           <h2 className="font-display text-balance text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            How OurHouse Works
+            How MyHouse Works
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">
             Three simple steps to finding your ideal college housing. Set it up
@@ -48,7 +48,7 @@ export function FeaturesSection() {
               className="group rounded-2xl border border-border bg-card p-8 transition-all hover:border-accent/50 hover:shadow-lg"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
-                <feature.icon className="h-6 w-6 text-accent" />
+                <feature.icon className="h-6 w-6 text-accent" aria-hidden="true" />
               </div>
               <h3 className="mt-5 font-display text-lg font-semibold text-foreground">
                 {feature.title}

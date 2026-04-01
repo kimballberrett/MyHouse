@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic'
+
+
 import { createClient } from "@supabase/supabase-js"
 import { AppHeader } from "@/components/app-header"
 import { HeroSection } from "@/components/landing/hero-section"

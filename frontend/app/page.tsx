@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 
+import { unstable_noStore as noStore } from "next/cache"
 import { createClient } from "@supabase/supabase-js"
 import { AppHeader } from "@/components/app-header"
 import { HeroSection } from "@/components/landing/hero-section"
@@ -8,6 +9,7 @@ import { FeaturesSection } from "@/components/landing/features-section"
 import { CTASection } from "@/components/landing/cta-section"
 
 async function getStats(): Promise<{ users: number; listings: number }> {
+  noStore()
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) return { users: 0, listings: 0 }

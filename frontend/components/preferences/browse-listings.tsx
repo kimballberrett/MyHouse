@@ -115,7 +115,13 @@ export function BrowseListings({
     if (safeListings.length === 0) return
     if (preferences === undefined) return
 
-    const initial = buildFiltersFromPreferences(preferences)
+    const initial: FilterState = {
+      minPrice: priceBounds.min,
+      maxPrice: priceBounds.max,
+      bedrooms: "any",
+      bathrooms: "any",
+      amenities: [],
+    }
     setDefaultFilters(initial)
     setDraftFilters(initial)
     setAppliedFilters(initial)
@@ -245,7 +251,7 @@ export function BrowseListings({
               </p>
             </div>
 
-            <div className="max-h-[60vh] space-y-6 overflow-y-auto pr-1">
+            <div className="max-h-[40vh] space-y-6 overflow-y-auto pr-1">
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-accent">Price Range</h3>
                 <div className="grid grid-cols-2 gap-3">

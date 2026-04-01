@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { FormEvent, Suspense, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Home, Mail, ShieldCheck, UserPlus } from "lucide-react"
+import { Home } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -114,52 +114,8 @@ function LoginPageInner() {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <main className="mx-auto grid min-h-[calc(100vh-73px)] w-full max-w-5xl items-center px-4 py-10 md:py-16">
-        <section className="grid gap-6 md:grid-cols-[1.15fr_1fr] md:gap-8">
-          <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-            <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-foreground">
-              <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-              Protected Access
-            </div>
-            <h1 className="mt-5 font-display text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              Access your account
-            </h1>
-            <p className="mt-3 max-w-md text-sm text-muted-foreground">
-              Sign in with your email and password, or create a new account if
-              you are new to MyHouse.
-            </p>
-
-            <div className="mt-8 space-y-4">
-              <div className="flex items-start gap-3 rounded-xl border border-border bg-background p-4">
-                <div className="mt-0.5 rounded-lg bg-accent/10 p-2">
-                  <Mail className="h-4 w-4 text-accent" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Secure credential login
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Seed account: demo@university.edu / demo1234
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 rounded-xl border border-border bg-background p-4">
-                <div className="mt-0.5 rounded-lg bg-accent/10 p-2">
-                  <UserPlus className="h-4 w-4 text-accent" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    New here?
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Use the create account button to register instantly.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
+      <main className="mx-auto grid min-h-[calc(100vh-73px)] w-full max-w-5xl items-center justify-items-center px-4 py-10 md:py-16">
+        <section className="w-full max-w-md">
           <Card className="rounded-2xl border-border shadow-sm">
             <CardHeader>
               <CardTitle className="font-display text-2xl">Account Access</CardTitle>

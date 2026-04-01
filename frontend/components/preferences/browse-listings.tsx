@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { SlidersHorizontal, Sparkles } from "lucide-react"
+import { SlidersHorizontal } from "lucide-react"
 import { ListingCard } from "@/components/listings/listing-card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -189,15 +189,6 @@ export function BrowseListings({
     setMaxPriceInput(String(cleared.maxPrice))
   }
 
-  function handleSeeMyMatches() {
-    const matches = buildFiltersFromPreferences(preferences)
-    setDefaultFilters(matches)
-    setDraftFilters(matches)
-    setAppliedFilters(matches)
-    setMinPriceInput(String(matches.minPrice))
-    setMaxPriceInput(String(matches.maxPrice))
-  }
-
   if (listingsError) {
     return (
       <div className="rounded-xl border border-destructive/40 bg-card p-6 text-destructive">
@@ -224,13 +215,6 @@ export function BrowseListings({
     <section>
       <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <Button
-            onClick={handleSeeMyMatches}
-            className="inline-flex items-center gap-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
-          >
-            <Sparkles className="h-4 w-4" />
-            My Matches
-          </Button>
           Showing <span className="font-semibold text-foreground">{filteredListings.length}</span>{" "}
           of <span className="font-semibold text-foreground">{safeListings.length}</span> listings
         </div>

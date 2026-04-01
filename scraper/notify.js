@@ -47,13 +47,13 @@ async function fetchUsersWithPreferences(supabase) {
 
   const { data: prefs, error: prefsError } = await supabase
     .from("user_preferences")
-    .select("user_id, min_price, max_price, max_distance_miles");
+    .select("user_id, min_price, max_price, max_distance_miles, notification_frequency");
 
   if (prefsError) throw new Error(`Failed to fetch preferences: ${prefsError.message}`);
   if (!prefs || !prefs.length) return [];
 
   return prefs
-    .filter((p) => emailById[p.user_id])
+    .filter((p) => emailById[p.user_id] && p.notification_frequency !== "none" && p.notification_frequency != null)
     .map((p) => ({
       email: emailById[p.user_id],
       min_price: p.min_price,

@@ -126,7 +126,7 @@ function LoginPageInner() {
             </h1>
             <p className="mt-3 max-w-md text-sm text-muted-foreground">
               Sign in with your email and password, or create a new account if
-              you are new to OurHouse.
+              you are new to MyHouse.
             </p>
 
             <div className="mt-8 space-y-4">

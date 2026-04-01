@@ -65,6 +65,8 @@ export function BrowseListings({
   const [defaultFilters, setDefaultFilters] = useState<FilterState | null>(null)
   const [initializedDefaults, setInitializedDefaults] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [minPriceInput, setMinPriceInput] = useState("")
+  const [maxPriceInput, setMaxPriceInput] = useState("")
 
   const priceBounds = useMemo(() => {
     if (safeListings.length === 0) {
@@ -117,6 +119,8 @@ export function BrowseListings({
     setDefaultFilters(initial)
     setDraftFilters(initial)
     setAppliedFilters(initial)
+    setMinPriceInput(String(initial.minPrice))
+    setMaxPriceInput(String(initial.maxPrice))
     setInitializedDefaults(true)
   }, [amenityOptions, initializedDefaults, preferences, priceBounds, safeListings.length])
 
@@ -130,20 +134,26 @@ export function BrowseListings({
     return filterListings(safeListings, draftFilters).length
   }, [draftFilters, safeListings])
 
-  function updateDraftMinPrice(value: number) {
+  function commitMinPrice() {
     if (!draftFilters) return
-    if (!Number.isFinite(value)) return
+    const value = Number(minPriceInput)
+    if (!Number.isFinite(value)) { setMinPriceInput(String(draftFilters.minPrice)); return }
     const nextMin = Math.max(priceBounds.min, Math.min(value, priceBounds.max))
     const nextMax = Math.max(nextMin, draftFilters.maxPrice)
     setDraftFilters({ ...draftFilters, minPrice: nextMin, maxPrice: nextMax })
+    setMinPriceInput(String(nextMin))
+    setMaxPriceInput(String(nextMax))
   }
 
-  function updateDraftMaxPrice(value: number) {
+  function commitMaxPrice() {
     if (!draftFilters) return
-    if (!Number.isFinite(value)) return
+    const value = Number(maxPriceInput)
+    if (!Number.isFinite(value)) { setMaxPriceInput(String(draftFilters.maxPrice)); return }
     const nextMax = Math.max(priceBounds.min, Math.min(value, priceBounds.max))
     const nextMin = Math.min(nextMax, draftFilters.minPrice)
     setDraftFilters({ ...draftFilters, minPrice: nextMin, maxPrice: nextMax })
+    setMinPriceInput(String(nextMin))
+    setMaxPriceInput(String(nextMax))
   }
 
   function toggleAmenity(amenity: string, checked: boolean) {
@@ -175,6 +185,8 @@ export function BrowseListings({
     }
     setDraftFilters(cleared)
     setAppliedFilters(cleared)
+    setMinPriceInput(String(cleared.minPrice))
+    setMaxPriceInput(String(cleared.maxPrice))
   }
 
   function handleSeeMyMatches() {
@@ -182,6 +194,8 @@ export function BrowseListings({
     setDefaultFilters(matches)
     setDraftFilters(matches)
     setAppliedFilters(matches)
+    setMinPriceInput(String(matches.minPrice))
+    setMaxPriceInput(String(matches.maxPrice))
   }
 
   if (listingsError) {
@@ -256,10 +270,9 @@ export function BrowseListings({
                     <Input
                       id="browse-min-price"
                       type="number"
-                      min={priceBounds.min}
-                      max={priceBounds.max}
-                      value={draftFilters?.minPrice ?? priceBounds.min}
-                      onChange={(event) => updateDraftMinPrice(Number(event.target.value))}
+                      value={minPriceInput}
+                      onChange={(e) => setMinPriceInput(e.target.value)}
+                      onBlur={commitMinPrice}
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -267,10 +280,9 @@ export function BrowseListings({
                     <Input
                       id="browse-max-price"
                       type="number"
-                      min={priceBounds.min}
-                      max={priceBounds.max}
-                      value={draftFilters?.maxPrice ?? priceBounds.max}
-                      onChange={(event) => updateDraftMaxPrice(Number(event.target.value))}
+                      value={maxPriceInput}
+                      onChange={(e) => setMaxPriceInput(e.target.value)}
+                      onBlur={commitMaxPrice}
                     />
                   </div>
                 </div>

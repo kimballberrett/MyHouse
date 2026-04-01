@@ -33,7 +33,7 @@ export function FeaturesSection() {
       <div className="mx-auto max-w-5xl px-4">
         <div className="text-center">
           <h2 className="font-display text-balance text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            How OurHouse Works
+            How MyHouse Works
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">
             Three simple steps to finding your ideal college housing. Set it up

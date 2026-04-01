@@ -24,11 +24,6 @@ const DEFAULT_RANKS = {
   amenities_rank: 5,
 }
 
-const QUICK_NOTIFICATION_OPTIONS = [
-  { value: "every-new", label: "Every New" },
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
-] as const
 
 export default function QuickPreferencesPage() {
   const router = useRouter()
@@ -87,7 +82,8 @@ export default function QuickPreferencesPage() {
     setDistance(Number(prefs.max_distance_miles ?? 2))
     setMinBedrooms(prefs.min_bedrooms ?? 1)
     setMinBathrooms(prefs.min_bathrooms ?? 1)
-    setNotificationFrequency(prefs.notification_frequency ?? "daily")
+    const freq = prefs.notification_frequency
+    setNotificationFrequency(freq === "none" ? "none" : "daily")
     setInitialized(true)
   }, [
     sessionReady,
@@ -253,30 +249,23 @@ export default function QuickPreferencesPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Daily summary frequency</Label>
-            <RadioGroup
-              value={notificationFrequency}
-              onValueChange={setNotificationFrequency}
-              className="grid gap-2 sm:grid-cols-3"
-            >
-              {QUICK_NOTIFICATION_OPTIONS.map((option) => (
-                <label
+            <Label>Would you like to receive email notifications?</Label>
+            <div className="flex gap-3">
+              {[{ value: "daily", label: "Yes" }, { value: "none", label: "No" }].map((option) => (
+                <button
                   key={option.value}
-                  htmlFor={`quick-frequency-${option.value}`}
-                  className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-sm transition-all ${
+                  type="button"
+                  onClick={() => setNotificationFrequency(option.value)}
+                  className={`flex-1 rounded-lg border py-2.5 text-sm font-medium transition-all ${
                     notificationFrequency === option.value
-                      ? "border-accent bg-accent/5"
-                      : "border-border hover:border-muted-foreground/30"
+                      ? "border-accent bg-accent/5 text-accent"
+                      : "border-border text-muted-foreground hover:border-muted-foreground/30"
                   }`}
                 >
-                  <RadioGroupItem
-                    value={option.value}
-                    id={`quick-frequency-${option.value}`}
-                  />
-                  <span>{option.label}</span>
-                </label>
+                  {option.label}
+                </button>
               ))}
-            </RadioGroup>
+            </div>
           </div>
 
           {formError ? <p className="text-sm text-destructive">{formError}</p> : null}

@@ -12,7 +12,7 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: 'OurHouse - Find College Housing',
+  title: 'MyHouse - Find College Housing',
   description:
     'Find the perfect college housing with personalized preferences and real-time listings.',
 }

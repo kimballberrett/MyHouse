@@ -45,9 +45,13 @@ export interface Notification {
 }
 
 export async function getPreferences(): Promise<Preferences | null> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) return null
+
   const { data, error } = await supabase
     .from("user_preferences")
     .select("*")
+    .eq("user_id", session.user.id)
     .maybeSingle()
 
   if (error) throw new Error(error.message)

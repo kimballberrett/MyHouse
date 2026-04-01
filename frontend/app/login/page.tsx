@@ -67,7 +67,6 @@ function LoginPageInner() {
       setErrorMessage(
         error instanceof Error ? error.message : "Invalid email or password."
       )
-    } finally {
       setIsSubmitting(false)
     }
   }
@@ -106,7 +105,6 @@ function LoginPageInner() {
           ? error.message
           : "Could not create account. That email may already be in use."
       )
-    } finally {
       setIsSubmitting(false)
     }
   }
